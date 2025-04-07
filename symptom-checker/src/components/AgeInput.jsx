@@ -1,14 +1,32 @@
 import React, { useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "../context/usercontext"; // ✅ Updated
 
-function UserInput() {
+function AgeInput() {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [showAgeDropdown, setShowAgeDropdown] = useState(false);
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
 
+  const { setUserData } = useUser(); // ✅ Updated
+  const navigate = useNavigate();
+
   const ages = Array.from({ length: 100 }, (_, i) => i + 1);
   const genders = ["Male", "Female", "Other"];
+
+  const handleContinue = () => {
+    if (!age || !gender) {
+      alert("Please select both age and gender.");
+      return;
+    }
+
+    // ✅ Save to global context
+    setUserData({ age, gender });
+
+    // ✅ Navigate to symptom checker page
+    navigate("/check");
+  };
 
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto mt-6 space-y-4">
@@ -75,8 +93,16 @@ function UserInput() {
           </ul>
         )}
       </div>
+
+      {/* Continue Button */}
+      <button
+        onClick={handleContinue}
+        className="mt-4 px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300"
+      >
+        Continue
+      </button>
     </div>
   );
 }
 
-export default UserInput;
+export default AgeInput;
