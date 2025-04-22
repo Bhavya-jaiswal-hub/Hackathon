@@ -1,19 +1,49 @@
 import React, { useState } from "react";
-import { useUser } from "../context/usercontext"; // ✅ Access user age/gender
+import { useUser } from "../context/usercontext";
+import axios from "axios";
 
 function SymptomChecker() {
-  const { userData } = useUser(); // age, gender
+  const { userData } = useUser();
   const [symptoms, setSymptoms] = useState("");
   const [prediction, setPrediction] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handlePredict = () => {
+  const handlePredict = async () => {
     if (!symptoms) {
       alert("Please enter your symptoms.");
       return;
     }
 
-    // 🔮 Dummy prediction for now (replace with real logic/backend later)
-    setPrediction("You may have a common cold. Stay hydrated and rest.");
+    setLoading(true);
+    setError("");
+    setPrediction("");
+
+    try {
+      const response = await axios.post(
+        "https://ai-doctor-api-ai-medical-chatbot-healthcare-ai-assistant.p.rapidapi.com/chat?noqueue=1",
+        {
+          message: `Age: ${userData.age}, Gender: ${userData.gender}, Symptoms: ${symptoms}`,
+          specialization: "general",
+          language: "en"
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "X-RapidAPI-Key": "a09d5dcf53mshd8ee663c0504d9p1ab5adjsn197284bdede1",
+            "X-RapidAPI-Host": "ai-doctor-api-ai-medical-chatbot-healthcare-ai-assistant.p.rapidapi.com",
+          },
+        }
+      );
+
+      // Display the prediction from API
+      setPrediction(response.data.response);
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+      console.error("Prediction error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,9 +66,16 @@ function SymptomChecker() {
       <button
         className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-md transition duration-300"
         onClick={handlePredict}
+        disabled={loading}
       >
-        Predict Disease
+        {loading ? "Predicting..." : "Predict Disease"}
       </button>
+
+      {error && (
+        <div className="mt-4 bg-red-100 p-3 rounded-md text-red-700">
+          {error}
+        </div>
+      )}
 
       {prediction && (
         <div className="mt-6 bg-green-100 p-4 rounded-md text-green-800">

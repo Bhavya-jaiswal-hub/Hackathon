@@ -18,7 +18,7 @@ const SignupForm = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const { fullName, email, password, confirmPassword } = formData;
@@ -33,21 +33,28 @@ const SignupForm = () => {
       return;
     }
 
-    // ✅ Store signup details in localStorage for demo (optional)
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const userExists = users.find((user) => user.email === email);
+    try {
+      const response = await fetch("http://localhost:5000/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName, // ✅ Correct key name
+          email,
+          password,
+        }),
+      });
 
-    if (userExists) {
-      alert("User already exists. Try logging in.");
-      navigate("/login");
-      return;
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("✅ Signup successful! Please login.");
+        navigate("/login");
+      } else {
+        alert("❌ " + data.message);
+      }
+    } catch (error) {
+      alert("❌ Error during signup: " + error.message);
     }
-
-    users.push({ fullName, email, password });
-    localStorage.setItem("users", JSON.stringify(users));
-
-    alert("Signup successful! Please login.");
-    navigate("/login"); // ✅ Redirect to login page
   };
 
   return (
