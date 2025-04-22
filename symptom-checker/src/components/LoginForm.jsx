@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // Adjust the path if needed
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { login } = useAuth(); // Get login method from context
 
   const [formData, setFormData] = useState({
     email: "",
@@ -38,20 +40,10 @@ const LoginForm = () => {
       if (response.ok) {
         alert("✅ Login successful!");
 
-        // Store the JWT token in localStorage
-        localStorage.setItem("token", data.token);
+        // ✅ Save JWT + user info using context login()
+        login(data.token, { email }); // You can add more user info here if you return it from backend
 
-        // Optionally, store user data in localStorage if needed
-        // localStorage.setItem("user", JSON.stringify(data.user));
-
-        // Set the Authorization header for future requests (if needed)
-        // You can set this on the frontend or include it in the API requests
-        // Example of a function that adds the token to headers:
-        // const getAuthHeaders = () => ({
-        //   Authorization: `Bearer ${localStorage.getItem('token')}`
-        // });
-
-        navigate("/"); // Redirect to homepage or dashboard
+        navigate("/"); // Or navigate("/symptom-checker") if you want direct access
       } else {
         alert("❌ " + data.message);
       }
