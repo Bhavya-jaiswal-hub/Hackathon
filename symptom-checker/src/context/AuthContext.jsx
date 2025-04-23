@@ -19,12 +19,32 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
   };
 
-  // ✅ Call this when user logs out
+  // ✅ Frontend-only logout
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("authUser");
     setAuthToken(null);
     setUser(null);
+  };
+
+  // ✅ Backend + frontend signout (calls API and clears token)
+  const signout = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await fetch("http://localhost:5000/api/signout", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      console.error("Error during signout:", error);
+    }
+
+    // Clear frontend data
+    logout();
   };
 
   useEffect(() => {
@@ -39,10 +59,8 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  
-
   return (
-    <AuthContext.Provider value={{ authToken, user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ authToken, user, isAuthenticated, login, logout, signout }}>
       {children}
     </AuthContext.Provider>
   );

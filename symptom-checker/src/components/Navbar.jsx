@@ -7,7 +7,7 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, signout } = useAuth(); // ✅ Also get signout
 
   const navItems = [
     { name: "Home", path: "/" },
@@ -30,6 +30,13 @@ const Navbar = () => {
   const handleLogout = () => {
     logout();
     navigate("/");
+    setMenuOpen(false);
+  };
+
+  const handleSignout = async () => {
+    await signout();
+    navigate("/");
+    setMenuOpen(false);
   };
 
   return (
@@ -66,12 +73,20 @@ const Navbar = () => {
         {/* Auth Buttons (visible on large screens only) */}
         <div className="hidden lg:flex items-center space-x-4 ml-auto">
           {isAuthenticated ? (
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
-            >
-              Logout
-            </button>
+            <>
+              <button
+                onClick={handleLogout}
+                className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600 transition"
+              >
+                Logout
+              </button>
+              <button
+                onClick={handleSignout}
+                className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
+              >
+                Sign Out
+              </button>
+            </>
           ) : (
             <>
               <button
@@ -108,14 +123,24 @@ const Navbar = () => {
             ))}
 
             {isAuthenticated ? (
-              <li>
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
-                >
-                  Logout
-                </button>
-              </li>
+              <>
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600 transition"
+                  >
+                    Logout
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={handleSignout}
+                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
+                  >
+                    Sign Out
+                  </button>
+                </li>
+              </>
             ) : (
               <>
                 <li>

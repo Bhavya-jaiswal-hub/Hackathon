@@ -3,7 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();  // Correct import for dotenv
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,18 +30,28 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
+// ✅ In-memory token blacklist (for demo purposes only)
+const tokenBlacklist = [];
+
 // ✅ Middleware to authenticate JWT token
 const authenticateToken = (req, res, next) => {
-  const token = req.header("Authorization")?.replace("Bearer ", "");
-  
+  const authHeader = req.header("Authorization");
+  const token = authHeader && authHeader.replace("Bearer ", "");
+
   if (!token) {
     return res.status(401).json({ message: "Access denied, no token provided." });
   }
 
+  // 🚫 Check if token is blacklisted
+  if (tokenBlacklist.includes(token)) {
+    return res.status(403).json({ message: "Token has been invalidated." });
+  }
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Add the decoded token to the request object
-    next(); // Proceed to the next middleware or route handler
+    req.user = decoded;
+    req.token = token; // ✅ Set token on request for signout route
+    next();
   } catch (error) {
     res.status(400).json({ message: "Invalid token." });
   }
@@ -71,7 +81,7 @@ app.post("/api/signup", async (req, res) => {
   }
 });
 
-// ✅ Login Route with JWT token
+// ✅ Login Route
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -109,7 +119,17 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// ✅ Route: Receive user age & gender (Protected)
+// ✅ Signout Route
+app.post("/api/signout", authenticateToken, (req, res) => {
+  const token = req.token;
+  if (!tokenBlacklist.includes(token)) {
+    tokenBlacklist.push(token);
+  }
+  // Blacklist the token
+  res.status(200).json({ message: "Signed out successfully" });
+});
+
+// ✅ User Info Route (Protected)
 app.post("/api/userinfo", authenticateToken, (req, res) => {
   const { age, gender } = req.body;
 
@@ -123,7 +143,7 @@ app.post("/api/userinfo", authenticateToken, (req, res) => {
   });
 });
 
-// ✅ Placeholder Route: Predict disease (Protected, Example of adding middleware)
+// ✅ Prediction Route (Protected)
 app.post("/api/predict", authenticateToken, async (req, res) => {
   const { age, gender, symptoms } = req.body;
 
@@ -131,15 +151,12 @@ app.post("/api/predict", authenticateToken, async (req, res) => {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // Placeholder response for now
   res.status(200).json({
     prediction: "Prediction will come from Infermedica after API integration.",
   });
 });
 
-
-
-// Start server
+// ✅ Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
