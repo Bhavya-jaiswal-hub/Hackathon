@@ -1,12 +1,18 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HeroImage from "./components/HeroImage";
 import AgeInput from "./components/AgeInput";
 import SignupForm from "./components/SignupForm";
 import LoginForm from "./components/LoginForm";
-import SymptomChecker from "./components/SymptomChecker"; // ✅ Import this
-import { AuthProvider } from "./context/AuthContext"; // ✅ Import AuthProvider
+import SymptomChecker from "./components/SymptomChecker";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+
+// ✅ PrivateRoute component
+const PrivateRoute = ({ element }) => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? element : <Navigate to="/login" />;
+};
 
 function App() {
   return (
@@ -26,7 +32,12 @@ function App() {
           />
           <Route path="/signup" element={<SignupForm />} />
           <Route path="/login" element={<LoginForm />} />
-          <Route path="/check" element={<SymptomChecker />} /> {/* ✅ Add this route */}
+
+          {/* ✅ Protected route */}
+          <Route
+            path="/check"
+            element={<PrivateRoute element={<SymptomChecker />} />}
+          />
         </Routes>
       </div>
     </AuthProvider>
