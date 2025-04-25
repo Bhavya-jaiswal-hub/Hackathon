@@ -193,6 +193,7 @@ app.post("/api/forgot-password", async (req, res) => {
 
     res.status(200).json({ message: "Reset link sent to email" });
   } catch (err) {
+    console.error("Error occurred in forgot-password route:", err);  // Log error here
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
