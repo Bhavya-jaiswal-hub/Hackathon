@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // Adjust the path if needed
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // ✅ Already correct for your structure
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const { login } = useAuth(); // Get login method from context
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -39,11 +39,8 @@ const LoginForm = () => {
 
       if (response.ok) {
         alert("✅ Login successful!");
-
-        // ✅ Save JWT + user info using context login()
-        login(data.token, { email }); // You can add more user info here if you return it from backend
-
-        navigate("/"); // Or navigate("/symptom-checker") if you want direct access
+        login(data.token, { email });
+        navigate("/");
       } else {
         alert("❌ " + data.message);
       }
@@ -81,6 +78,14 @@ const LoginForm = () => {
               placeholder="Enter your password"
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
             />
+            <div className="text-right mt-1">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Forgot Password?
+              </Link>
+            </div>
           </div>
 
           <button

@@ -3,10 +3,15 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 require("dotenv").config();
+
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
 
 // Middleware
 app.use(cors());
@@ -26,6 +31,8 @@ const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  resetToken: String,
+  resetTokenExpiry: Date,
 });
 
 const User = mongoose.model("User", userSchema);
@@ -50,12 +57,21 @@ const authenticateToken = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-    req.token = token; // ✅ Set token on request for signout route
+    req.token = token;
     next();
   } catch (error) {
     res.status(400).json({ message: "Invalid token." });
   }
 };
+
+// ✅ Nodemailer Transporter
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 // ✅ Signup Route
 app.post("/api/signup", async (req, res) => {
@@ -71,7 +87,6 @@ app.post("/api/signup", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = new User({ fullName, email, password: hashedPassword });
     await newUser.save();
 
@@ -125,14 +140,12 @@ app.post("/api/signout", authenticateToken, (req, res) => {
   if (!tokenBlacklist.includes(token)) {
     tokenBlacklist.push(token);
   }
-  // Blacklist the token
   res.status(200).json({ message: "Signed out successfully" });
 });
 
-// ✅ User Info Route (Protected)
+// ✅ User Info Route
 app.post("/api/userinfo", authenticateToken, (req, res) => {
   const { age, gender } = req.body;
-
   if (!age || !gender) {
     return res.status(400).json({ message: "Age and gender are required" });
   }
@@ -143,10 +156,9 @@ app.post("/api/userinfo", authenticateToken, (req, res) => {
   });
 });
 
-// ✅ Prediction Route (Protected)
+// ✅ Prediction Route
 app.post("/api/predict", authenticateToken, async (req, res) => {
   const { age, gender, symptoms } = req.body;
-
   if (!age || !gender || !symptoms) {
     return res.status(400).json({ message: "All fields are required" });
   }
@@ -156,7 +168,62 @@ app.post("/api/predict", authenticateToken, async (req, res) => {
   });
 });
 
+// ✅ Forgot Password Route
+app.post("/api/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = Date.now() + 3600000; // 1 hour
+
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = resetTokenExpiry;
+    await user.save();
+
+    const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Password Reset Request",
+      html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 1 hour.</p>`,
+    });
+
+    res.status(200).json({ message: "Reset link sent to email" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// ✅ Reset Password Route
+app.post("/api/reset-password/:token", async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) return res.status(400).json({ message: "Invalid or expired token" });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
 // ✅ Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

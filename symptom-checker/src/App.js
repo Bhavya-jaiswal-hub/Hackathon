@@ -6,9 +6,11 @@ import AgeInput from "./components/AgeInput";
 import SignupForm from "./components/SignupForm";
 import LoginForm from "./components/LoginForm";
 import SymptomChecker from "./components/SymptomChecker";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
-// ✅ PrivateRoute component
+// ✅ Protects routes that require login
 const PrivateRoute = ({ element }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? element : <Navigate to="/login" />;
@@ -21,6 +23,7 @@ function App() {
         <Navbar />
 
         <Routes>
+          {/* Public Routes */}
           <Route
             path="/"
             element={
@@ -32,8 +35,10 @@ function App() {
           />
           <Route path="/signup" element={<SignupForm />} />
           <Route path="/login" element={<LoginForm />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* ✅ Protected route */}
+          {/* Protected Route */}
           <Route
             path="/check"
             element={<PrivateRoute element={<SymptomChecker />} />}
