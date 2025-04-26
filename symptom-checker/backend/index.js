@@ -1,3 +1,4 @@
+// ✅ Imports
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -7,24 +8,31 @@ const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 require("dotenv").config();
 
-
-
+// ✅ App setup
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ✅ Middleware for CORS (allow frontend running on port 5173)
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,  // Allow frontend URL from .env
+    methods: ["GET", "POST"],  // Allow necessary methods
+    credentials: true,          // Allow cookies if necessary
+  })
+);
 
-// Middleware
-app.use(cors());
+// ✅ Middleware
 app.use(express.json());
 
-// ✅ Connect to MongoDB
+// ✅ Connect to MongoDB Atlas
 mongoose
   .connect(process.env.MONGO_URI, {
+    dbName: "symptomcheckercluster",
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .catch((err) => console.error("❌ MongoDB Atlas connection error:", err));
 
 // ✅ User Schema & Model
 const userSchema = new mongoose.Schema({
@@ -49,7 +57,6 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ message: "Access denied, no token provided." });
   }
 
-  // 🚫 Check if token is blacklisted
   if (tokenBlacklist.includes(token)) {
     return res.status(403).json({ message: "Token has been invalidated." });
   }
@@ -193,7 +200,7 @@ app.post("/api/forgot-password", async (req, res) => {
 
     res.status(200).json({ message: "Reset link sent to email" });
   } catch (err) {
-    console.error("Error occurred in forgot-password route:", err);  // Log error here
+    console.error("Error occurred in forgot-password route:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
