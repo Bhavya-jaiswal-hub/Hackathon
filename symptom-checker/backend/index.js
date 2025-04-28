@@ -231,7 +231,12 @@ app.post("/api/reset-password/:token", async (req, res) => {
   }
 });
 
+app.get("/", (req, res) => {
+  res.send("Welcome to Symptom Checker Backend API!");
+});
+
+
 // ✅ Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server is running on port ${PORT}`);
 });

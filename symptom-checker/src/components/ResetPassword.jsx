@@ -9,7 +9,7 @@ export default function ResetPassword() {
 
   const handleReset = async (e) => {
     e.preventDefault();
-    const res = await axios.post(`http://localhost:5000/api/reset-password/${token}`, {
+    const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/reset-password/${token}`, {
       newPassword,
     });
     setMessage(res.data.message);
