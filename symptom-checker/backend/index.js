@@ -18,6 +18,16 @@ app.use(cors({
 app.use(express.json());
 
 // ------------------ MongoDB Connection ------------------
+
+app.get("/api/test-db", async (req, res) => {
+  try {
+    const admin = await mongoose.connection.db.admin().ping();
+    res.status(200).json({ message: "✅ MongoDB is connected", result: admin });
+  } catch (err) {
+    console.error("❌ MongoDB Ping Error:", err);
+    res.status(500).json({ message: "❌ MongoDB is NOT connected", error: err.message });
+  }
+});
 mongoose
   .connect(process.env.MONGODB_URI, {
     dbName: "symptomcheckercluster",
