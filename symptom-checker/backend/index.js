@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs"); // ✅ replaced bcrypt with bcryptjs
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
@@ -59,7 +59,7 @@ app.post("/api/signup", async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: "Email already exists" });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10); // ✅ bcryptjs works the same
     const newUser = new User({ fullName, email, password: hashedPassword });
     await newUser.save();
 
@@ -91,7 +91,7 @@ app.post("/api/login", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password); // ✅ bcryptjs compare
     if (!isPasswordValid) return res.status(401).json({ message: "Invalid credentials" });
 
     const token = jwt.sign(
@@ -123,7 +123,7 @@ app.post("/api/forgot-password", async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const token = crypto.randomBytes(20).toString("hex");
-    const expiry = Date.now() + 3600000; // 1 hour
+    const expiry = Date.now() + 3600000;
 
     user.resetToken = token;
     user.resetTokenExpiry = expiry;
@@ -153,7 +153,7 @@ app.post("/api/send-otp", async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+    const expiry = Date.now() + 10 * 60 * 1000;
 
     user.otp = otp;
     user.otpExpiry = expiry;
@@ -185,7 +185,6 @@ app.post("/api/login-with-otp", async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
-    // Clear OTP
     user.otp = undefined;
     user.otpExpiry = undefined;
     await user.save();
