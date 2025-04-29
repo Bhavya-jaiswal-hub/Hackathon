@@ -11,13 +11,16 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: "https://hackathon-tau-bay.vercel.app",
+  credentials: true,
+}));
 app.use(express.json());
 
 // ------------------ MongoDB Connection ------------------
 mongoose
   .connect(process.env.MONGODB_URI, {
-     dbName: "symptomcheckercluster",
+    dbName: "symptomcheckercluster",
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -60,7 +63,11 @@ app.post("/api/signup", async (req, res) => {
     const newUser = new User({ fullName, email, password: hashedPassword });
     await newUser.save();
 
-    const token = jwt.sign({ userId: newUser._id, fullName, email }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(
+      { userId: newUser._id, fullName, email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
     res.status(201).json({
       message: "Signup successful",
@@ -87,7 +94,11 @@ app.post("/api/login", async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ userId: user._id, fullName: user.fullName, email }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(
+      { userId: user._id, fullName: user.fullName, email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
     res.status(200).json({
       message: "Login successful",
@@ -118,11 +129,13 @@ app.post("/api/forgot-password", async (req, res) => {
     user.resetTokenExpiry = expiry;
     await user.save();
 
+    const resetLink = `https://symptomchecker.vercel.app/reset-password/${token}`;
+
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: user.email,
       subject: "Password Reset",
-      html: `<p>Click the link to reset your password:</p><a href="http://localhost:5173/reset-password/${token}">Reset Password</a>`,
+      html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 1 hour.</p>`,
     });
 
     res.status(200).json({ message: "Password reset email sent" });
@@ -151,6 +164,9 @@ app.post("/api/send-otp", async (req, res) => {
       to: user.email,
       subject: "Your OTP for Login",
       html: `<p>Your OTP is <b>${otp}</b>. It expires in 10 minutes.</p>`,
+    }).catch((err) => {
+      console.error("Email send error:", err);
+      return res.status(500).json({ message: "Failed to send OTP email", error: err.message });
     });
 
     res.status(200).json({ message: "OTP sent to email" });
@@ -174,7 +190,11 @@ app.post("/api/login-with-otp", async (req, res) => {
     user.otpExpiry = undefined;
     await user.save();
 
-    const token = jwt.sign({ userId: user._id, fullName: user.fullName, email }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(
+      { userId: user._id, fullName: user.fullName, email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
     res.status(200).json({
       message: "OTP login successful",
@@ -190,13 +210,13 @@ app.post("/api/login-with-otp", async (req, res) => {
   }
 });
 
+// ✅ Global Error Handler
 app.use((err, req, res, next) => {
   console.error("🔥 Global error handler:", err.stack);
   res.status(500).json({ message: "Internal server error", error: err.message });
 });
 
-
-// ✅ Server Start
+// ✅ Start Server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
