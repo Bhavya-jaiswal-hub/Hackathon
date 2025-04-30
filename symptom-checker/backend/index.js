@@ -22,6 +22,7 @@ app.use(express.json());
 
 mongoose
   .connect(process.env.MONGODB_URI, {
+    dbName:symptomcheckercluster,
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
