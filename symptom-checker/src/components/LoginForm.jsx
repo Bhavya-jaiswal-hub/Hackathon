@@ -73,7 +73,7 @@ const LoginForm = () => {
     if (!otp) return alert("Please enter OTP");
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/verify-otp`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/login-with-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, otp }),
