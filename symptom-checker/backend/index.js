@@ -18,21 +18,10 @@ app.use(cors({
 app.use(express.json());
 
 // ------------------ MongoDB Connection ------------------
-app.get("/api/test-db", async (req, res) => {
-  try {
-    await mongoose.connection.db.admin().ping();
-    res.status(200).json({ message: "✅ MongoDB is connected and responsive" });
-  } catch (error) {
-    res.status(500).json({
-      message: "❌ MongoDB is NOT connected",
-      error: error.message,
-    });
-  }
-});
 
 
 mongoose
-  .connect("mongodb+srv://bhavya2313139:YiTgyVYADP4BlCQD@symptomcheckercluster.i2h98fq.mongodb.net/symptomchecker?retryWrites=true&w=majority&appName=Symptomcheckercluster", {
+  .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
