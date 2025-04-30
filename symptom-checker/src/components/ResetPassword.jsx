@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 
 export default function ResetPassword() {
-  const { token } = useParams();
+  const query = new URLSearchParams(useLocation().search);
+  const token = query.get("token");
+
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
 
