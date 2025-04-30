@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const bcrypt = require("bcryptjs"); // ✅ replaced bcrypt with bcryptjs
+const bcrypt = require("bcryptjs"); // ✅ bcryptjs works the same as bcrypt
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
@@ -12,17 +12,15 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: "https://hackathon-tau-bay.vercel.app",
+  origin: "https://hackathon-tau-bay.vercel.app", // Update this with the correct origin if needed
   credentials: true,
 }));
 app.use(express.json());
 
 // ------------------ MongoDB Connection ------------------
-
-
 mongoose
   .connect(process.env.MONGODB_URI, {
-      dbName: "symptomcheckercluster",
+    dbName: "symptomcheckercluster",
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -125,7 +123,7 @@ app.post("/api/forgot-password", async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const token = crypto.randomBytes(20).toString("hex");
-    const expiry = Date.now() + 3600000;
+    const expiry = Date.now() + 3600000; // 1 hour expiry
 
     user.resetToken = token;
     user.resetTokenExpiry = expiry;
@@ -146,6 +144,33 @@ app.post("/api/forgot-password", async (req, res) => {
   }
 });
 
+// ✅ Reset Password (with Token Validation)
+app.post("/api/reset-password/:token", async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({ resetToken: token });
+    if (!user) return res.status(400).json({ message: "Invalid or expired token" });
+
+    // Check if the token has expired
+    if (Date.now() > user.resetTokenExpiry) {
+      return res.status(400).json({ message: "Token has expired" });
+    }
+
+    // Hash the new password and save
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.resetToken = undefined; // Clear the reset token after reset
+    user.resetTokenExpiry = undefined; // Clear the expiry
+    await user.save();
+
+    res.status(200).json({ message: "Password has been successfully reset" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
 // ✅ Send OTP for Login
 app.post("/api/send-otp", async (req, res) => {
   const { email } = req.body;
@@ -155,7 +180,7 @@ app.post("/api/send-otp", async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = Date.now() + 10 * 60 * 1000;
+    const expiry = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
 
     user.otp = otp;
     user.otpExpiry = expiry;
