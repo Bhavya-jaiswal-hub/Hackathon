@@ -1,23 +1,27 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 
 export default function ResetPassword() {
-  const query = new URLSearchParams(useLocation().search);
-  const token = query.get("token");
+  const { token } = useParams();
 
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const handleReset = async (e) => {
     e.preventDefault();
+    setMessage("");
+    setError("");
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/reset-password/${token}`, {
-        newPassword,
-      });
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/reset-password/${token}`,
+        { newPassword }
+      );
       setMessage(res.data.message);
-    } catch (error) {
-      setMessage(error.response?.data?.message || "Something went wrong. Please try again.");
+      setNewPassword("");
+    } catch (err) {
+      setError(err.response?.data?.message || "Something went wrong. Please try again.");
     }
   };
 
@@ -27,6 +31,7 @@ export default function ResetPassword() {
         <h2 className="text-2xl font-bold text-center text-green-600 mb-6">
           Reset Your Password
         </h2>
+
         <form onSubmit={handleReset} className="space-y-4">
           <div>
             <label className="block text-gray-700 text-sm font-semibold mb-2">
@@ -41,6 +46,7 @@ export default function ResetPassword() {
               required
             />
           </div>
+
           <button
             type="submit"
             className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition"
@@ -48,9 +54,16 @@ export default function ResetPassword() {
             Reset Password
           </button>
         </form>
+
         {message && (
           <p className="mt-4 text-center text-sm text-green-600 font-medium">
             {message}
+          </p>
+        )}
+
+        {error && (
+          <p className="mt-4 text-center text-sm text-red-500 font-medium">
+            {error}
           </p>
         )}
       </div>
