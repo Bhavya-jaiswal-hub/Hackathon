@@ -129,7 +129,7 @@ app.post("/api/forgot-password", async (req, res) => {
     user.resetTokenExpiry = expiry;
     await user.save();
 
-    const resetLink = `https://symptomchecker.vercel.app/reset-password/${token}`;
+    const resetLink = `https://hackathon-tau-bay.vercel.app/reset-password/${token}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
