@@ -150,24 +150,38 @@ app.post("/api/reset-password/:token", async (req, res) => {
   const { newPassword } = req.body;
 
   try {
-    const user = await User.findOne({ resetToken: token });
-    if (!user) return res.status(400).json({ message: "Invalid or expired token" });
+    console.log("Received token:", token); // ✅ Debug: show token in console
 
-    // Check if the token has expired
+    // Check if user with this resetToken exists
+    const user = await User.findOne({ resetToken: token });
+
+    if (!user) {
+      console.log("No user found for token");
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    // Check if the token is expired
     if (Date.now() > user.resetTokenExpiry) {
+      console.log("Token has expired");
       return res.status(400).json({ message: "Token has expired" });
     }
 
-    // Hash the new password and save
+    // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and clear reset fields
     user.password = hashedPassword;
-    user.resetToken = undefined; // Clear the reset token after reset
-    user.resetTokenExpiry = undefined; // Clear the expiry
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
+
     await user.save();
 
-    res.status(200).json({ message: "Password has been successfully reset" });
+    console.log("Password reset successful for:", user.email);
+
+    return res.status(200).json({ message: "Password has been successfully reset" });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Reset password error:", err.message);
+    return res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
