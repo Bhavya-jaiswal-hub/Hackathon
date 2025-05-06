@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const bcrypt = require("bcryptjs"); // ✅ bcryptjs works the same as bcrypt
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: "https://hackathon-tau-bay.vercel.app", // Update this with the correct origin if needed
+  origin: "https://hackathon-tau-bay.vercel.app",
   credentials: true,
 }));
 app.use(express.json());
@@ -24,8 +24,8 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.error("MongoDB Error:", err));
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.error("❌ MongoDB Error:", err));
 
 // ------------------ Nodemailer Transport ------------------
 const transporter = nodemailer.createTransport({
@@ -51,7 +51,7 @@ const User = mongoose.model("User", userSchema);
 
 // ------------------ Routes ------------------
 
-// ✅ Signup
+// ✅ Signup - Send Verification Email
 app.post("/api/signup", async (req, res) => {
   const { fullName, email, password } = req.body;
 
@@ -59,7 +59,6 @@ app.post("/api/signup", async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: "Email already exists" });
 
-    // Create token with user data (but don't save yet)
     const token = jwt.sign(
       { fullName, email, password },
       process.env.JWT_SECRET,
@@ -67,8 +66,6 @@ app.post("/api/signup", async (req, res) => {
     );
 
     const verificationLink = `https://hackathon-tau-bay.vercel.app/verify?token=${token}`;
-
-    
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -87,6 +84,26 @@ app.post("/api/signup", async (req, res) => {
   }
 });
 
+// ✅ Verify Email
+app.post("/api/verify-email", async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { fullName, email, password } = decoded;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: "User already exists" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ fullName, email, password: hashedPassword });
+    await newUser.save();
+
+    res.status(201).json({ message: "Email verified and user created!" });
+  } catch (err) {
+    res.status(400).json({ message: "Invalid or expired token", error: err.message });
+  }
+});
 
 // ✅ Email/Password Login
 app.post("/api/login", async (req, res) => {
@@ -96,7 +113,7 @@ app.post("/api/login", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const isPasswordValid = await bcrypt.compare(password, user.password); // ✅ bcryptjs compare
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) return res.status(401).json({ message: "Invalid credentials" });
 
     const token = jwt.sign(
@@ -119,31 +136,6 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// verify-email route 
-
-app.post("/api/verify-email", async (req, res) => {
-  const { token } = req.body;
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { fullName, email, password } = decoded;
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ fullName, email, password: hashedPassword });
-    await newUser.save();
-
-    res.status(201).json({ message: "Email verified and user created!" });
-  } catch (err) {
-    res.status(400).json({ message: "Invalid or expired token", error: err.message });
-  }
-});
-
-
 // ✅ Forgot Password
 app.post("/api/forgot-password", async (req, res) => {
   const { email } = req.body;
@@ -153,7 +145,7 @@ app.post("/api/forgot-password", async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const token = crypto.randomBytes(20).toString("hex");
-    const expiry = Date.now() + 3600000; // 1 hour expiry
+    const expiry = Date.now() + 3600000;
 
     user.resetToken = token;
     user.resetTokenExpiry = expiry;
@@ -163,7 +155,7 @@ app.post("/api/forgot-password", async (req, res) => {
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: user.email,
+      to: email,
       subject: "Password Reset",
       html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 1 hour.</p>`,
     });
@@ -174,44 +166,27 @@ app.post("/api/forgot-password", async (req, res) => {
   }
 });
 
-// ✅ Reset Password (with Token Validation)
+// ✅ Reset Password
 app.post("/api/reset-password/:token", async (req, res) => {
   const { token } = req.params;
   const { newPassword } = req.body;
 
   try {
-    console.log("Received token:", token); // ✅ Debug: show token in console
-
-    // Check if user with this resetToken exists
     const user = await User.findOne({ resetToken: token });
 
-    if (!user) {
-      console.log("No user found for token");
+    if (!user || Date.now() > user.resetTokenExpiry) {
       return res.status(400).json({ message: "Invalid or expired token" });
     }
 
-    // Check if the token is expired
-    if (Date.now() > user.resetTokenExpiry) {
-      console.log("Token has expired");
-      return res.status(400).json({ message: "Token has expired" });
-    }
-
-    // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update password and clear reset fields
     user.password = hashedPassword;
     user.resetToken = undefined;
     user.resetTokenExpiry = undefined;
-
     await user.save();
 
-    console.log("Password reset successful for:", user.email);
-
-    return res.status(200).json({ message: "Password has been successfully reset" });
+    res.status(200).json({ message: "Password has been successfully reset" });
   } catch (err) {
-    console.error("Reset password error:", err.message);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
@@ -224,7 +199,7 @@ app.post("/api/send-otp", async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+    const expiry = Date.now() + 10 * 60 * 1000;
 
     user.otp = otp;
     user.otpExpiry = expiry;
@@ -235,9 +210,6 @@ app.post("/api/send-otp", async (req, res) => {
       to: user.email,
       subject: "Your OTP for Login",
       html: `<p>Your OTP is <b>${otp}</b>. It expires in 10 minutes.</p>`,
-    }).catch((err) => {
-      console.error("Email send error:", err);
-      return res.status(500).json({ message: "Failed to send OTP email", error: err.message });
     });
 
     res.status(200).json({ message: "OTP sent to email" });
@@ -288,5 +260,5 @@ app.use((err, req, res, next) => {
 
 // ✅ Start Server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

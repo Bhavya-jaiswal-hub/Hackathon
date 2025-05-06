@@ -11,6 +11,9 @@ const SignupForm = () => {
     confirmPassword: "",
   });
 
+  const [loading, setLoading] = useState(false); // State to manage loading
+  const [errorMessage, setErrorMessage] = useState(""); // State to handle error messages
+
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -20,25 +23,35 @@ const SignupForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setErrorMessage(""); // Clear previous errors
     const { fullName, email, password, confirmPassword } = formData;
 
+    // Basic form validation
     if (!fullName || !email || !password || !confirmPassword) {
-      alert("Please fill in all fields");
+      setErrorMessage("Please fill in all fields.");
       return;
     }
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setErrorMessage("Passwords do not match!");
       return;
     }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
+
+    setLoading(true); // Show loading spinner
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName, // ✅ Correct key name
+          fullName,
           email,
           password,
         }),
@@ -47,22 +60,31 @@ const SignupForm = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert("✅ Signup successful! Please login.");
+        alert("✅ Verification email sent! Please check your inbox.");
         navigate("/login");
       } else {
-        alert("❌ " + data.message);
+        setErrorMessage(data.message || "❌ Something went wrong, please try again.");
       }
+      
     } catch (error) {
-      alert("❌ Error during signup: " + error.message);
+      setErrorMessage("❌ Error during signup: " + error.message);
+    } finally {
+      setLoading(false); // Hide loading spinner after the request
     }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
       <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
-        <h2 className="text-2xl font-bold mb-6 text-center text-red-500">
-          Sign Up
-        </h2>
+        <h2 className="text-2xl font-bold mb-6 text-center text-red-500">Sign Up</h2>
+        
+        {/* Error Message */}
+        {errorMessage && (
+          <div className="text-sm text-red-500 mb-4">
+            <p>{errorMessage}</p>
+          </div>
+        )}
+        
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-medium mb-1">Full Name</label>
@@ -77,9 +99,7 @@ const SignupForm = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Email Address
-            </label>
+            <label className="block text-sm font-medium mb-1">Email Address</label>
             <input
               type="email"
               name="email"
@@ -103,9 +123,7 @@ const SignupForm = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Confirm Password
-            </label>
+            <label className="block text-sm font-medium mb-1">Confirm Password</label>
             <input
               type="password"
               name="confirmPassword"
@@ -119,8 +137,9 @@ const SignupForm = () => {
           <button
             type="submit"
             className="w-full bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 transition duration-300"
+            disabled={loading} // Disable button when loading
           >
-            Create Account
+            {loading ? "Signing Up..." : "Create Account"}
           </button>
         </form>
       </div>
