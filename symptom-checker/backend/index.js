@@ -59,29 +59,34 @@ app.post("/api/signup", async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: "Email already exists" });
 
-    const hashedPassword = await bcrypt.hash(password, 10); // ✅ bcryptjs works the same
-    const newUser = new User({ fullName, email, password: hashedPassword });
-    await newUser.save();
-
+    // Create token with user data (but don't save yet)
     const token = jwt.sign(
-      { userId: newUser._id, fullName, email },
+      { fullName, email, password },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "15m" }
     );
 
-    res.status(201).json({
-      message: "Signup successful",
-      token,
-      user: {
-        id: newUser._id,
-        fullName,
-        email,
-      },
+    const verificationLink = `https://hackathon-tau-bay.vercel.app/verify?token=${token}`;
+
+    
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Verify Your Email',
+      html: `<p>Hello ${fullName},</p>
+             <p>Click the link below to verify your email and complete your signup:</p>
+             <a href="${verificationLink}">${verificationLink}</a>
+             <p>This link expires in 15 minutes.</p>`
     });
+
+    res.status(200).json({ message: "Verification email sent. Please check your inbox." });
   } catch (err) {
+    console.error("Signup error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+
 
 // ✅ Email/Password Login
 app.post("/api/login", async (req, res) => {
@@ -113,6 +118,31 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+
+// verify-email route 
+
+app.post("/api/verify-email", async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { fullName, email, password } = decoded;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ fullName, email, password: hashedPassword });
+    await newUser.save();
+
+    res.status(201).json({ message: "Email verified and user created!" });
+  } catch (err) {
+    res.status(400).json({ message: "Invalid or expired token", error: err.message });
+  }
+});
+
 
 // ✅ Forgot Password
 app.post("/api/forgot-password", async (req, res) => {
