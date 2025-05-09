@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const cors = require("cors");
+const axios = require("axios");
 
 dotenv.config();
 const app = express();
@@ -49,7 +50,52 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
+// ------------------ JWT Middleware ------------------
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1]; // Format: "Bearer <token>"
+
+  if (!token) return res.status(401).json({ message: "Access denied. No token provided." });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ message: "Invalid or expired token." });
+
+    req.user = user;
+    next();
+  });
+};
+
 // ------------------ Routes ------------------
+
+// ✅ Disease Prediction (Protected Route)
+app.post('/api/predict', authenticateToken, async (req, res) => {
+  try {
+    const { age, gender, symptoms } = req.body;
+
+    const apiBody = {
+      message: `Age: ${age}, Gender: ${gender}, Symptoms: ${symptoms}`,
+      specialization: "general",
+      language: "en"
+    };
+
+    const response = await axios.post(
+      'https://bilgisamapi-api2.p.rapidapi.com/ai-medical-diagnosis-api-symptoms-to-results',
+      apiBody,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+          'X-RapidAPI-Host': 'ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com'
+        }
+      }
+    );
+
+    res.json({ prediction: response.data.response });
+  } catch (error) {
+    console.error("Prediction error:", error.message);
+    res.status(500).json({ error: 'Prediction failed. Please try again.' });
+  }
+});
 
 // ✅ Signup - Send Verification Email
 app.post("/api/signup", async (req, res) => {
