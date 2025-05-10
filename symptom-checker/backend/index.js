@@ -70,15 +70,25 @@ const authenticateToken = (req, res, next) => {
 // ✅ Disease Prediction (Protected Route)
 app.post('/api/predict', authenticateToken, async (req, res) => {
   try {
-    const { age, gender, symptoms } = req.body;
+    const { age, gender, symptoms, height, weight, medicalHistory, currentMedications, allergies, lifestyle } = req.body;
 
+    // Prepare the request body with default empty values if not provided
     const apiBody = {
-      message: `Age: ${age}, Gender: ${gender}, Symptoms: ${symptoms}`,
-      specialization: "general",
-      language: "en"
+      symptoms: symptoms || [],  // Default to empty array if symptoms are not provided
+      patientInfo: {
+        age: age,
+        gender: gender,
+        height: height || null,  // Default to null if height is not provided
+        weight: weight || null,  // Default to null if weight is not provided
+        medicalHistory: medicalHistory || [],  // Default to empty array if not provided
+        currentMedications: currentMedications || [],  // Default to empty array if not provided
+        allergies: allergies || [],  // Default to empty array if not provided
+        lifestyle: lifestyle || {}  // Default to empty object if not provided
+      },
+      lang: "en"  // Language parameter
     };
-    console.log("Received data:", age, gender, symptoms);
-console.log("RapidAPI Key:", process.env.RAPIDAPI_KEY);
+
+    console.log("Received data:", req.body);
 
     const response = await axios.post(
       'https://ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com/ai-medical-diagnosis-api-symptoms-to-results',
@@ -92,12 +102,14 @@ console.log("RapidAPI Key:", process.env.RAPIDAPI_KEY);
       }
     );
 
+    // Send the prediction result back to the client
     res.json({ prediction: response.data.response });
   } catch (error) {
     console.error("Prediction error:", error);
     res.status(500).json({ error: 'Prediction failed. Please try again.' });
   }
 });
+
 
 // ✅ Signup - Send Verification Email
 app.post("/api/signup", async (req, res) => {
