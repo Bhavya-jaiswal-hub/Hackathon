@@ -103,7 +103,7 @@ app.post('/api/predict', authenticateToken, async (req, res) => {
     );
 
     // Send the prediction result back to the client
-    res.json({ prediction: response.data.response });
+    res.json({ prediction: response.data.result });
   } catch (error) {
     console.error("Prediction error:", error);
     res.status(500).json({ error: 'Prediction failed. Please try again.' });
