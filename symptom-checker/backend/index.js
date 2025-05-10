@@ -77,6 +77,8 @@ app.post('/api/predict', authenticateToken, async (req, res) => {
       specialization: "general",
       language: "en"
     };
+    console.log("Received data:", age, gender, symptoms);
+console.log("RapidAPI Key:", process.env.RAPIDAPI_KEY);
 
     const response = await axios.post(
       'https://ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com/ai-medical-diagnosis-api-symptoms-to-results',
