@@ -94,7 +94,7 @@ console.log("RapidAPI Key:", process.env.RAPIDAPI_KEY);
 
     res.json({ prediction: response.data.response });
   } catch (error) {
-    console.error("Prediction error:", error.message);
+    console.error("Prediction error:", error);
     res.status(500).json({ error: 'Prediction failed. Please try again.' });
   }
 });
