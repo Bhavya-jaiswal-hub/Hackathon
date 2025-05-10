@@ -70,25 +70,43 @@ const authenticateToken = (req, res, next) => {
 // ✅ Disease Prediction (Protected Route)
 app.post('/api/predict', authenticateToken, async (req, res) => {
   try {
-    const { age, gender, symptoms, height, weight, medicalHistory, currentMedications, allergies, lifestyle } = req.body;
+    const {
+      age,
+      gender,
+      symptoms,
+      height,
+      weight,
+      medicalHistory,
+      currentMedications,
+      allergies,
+      lifestyle
+    } = req.body;
 
-    // Prepare the request body with default empty values if not provided
+    if (!age || !gender || !symptoms || !Array.isArray(symptoms) || symptoms.length === 0) {
+      return res.status(400).json({ error: "Age, gender, and at least one symptom are required." });
+    }
+
     const apiBody = {
-      symptoms: symptoms || [],  // Default to empty array if symptoms are not provided
+      symptoms: symptoms,
       patientInfo: {
-        age: age,
-        gender: gender,
-        height: height || null,  // Default to null if height is not provided
-        weight: weight || null,  // Default to null if weight is not provided
-        medicalHistory: medicalHistory || [],  // Default to empty array if not provided
-        currentMedications: currentMedications || [],  // Default to empty array if not provided
-        allergies: allergies || [],  // Default to empty array if not provided
-        lifestyle: lifestyle || {}  // Default to empty object if not provided
+        age: parseInt(age),
+        gender: gender.toLowerCase(),
+        height: height || null,
+        weight: weight || null,
+        medicalHistory: medicalHistory || [],
+        currentMedications: currentMedications || [],
+        allergies: allergies || [],
+        lifestyle: lifestyle || {
+          smoking: false,
+          alcohol: "none",
+          exercise: "moderate",
+          diet: "balanced"
+        }
       },
-      lang: "en"  // Language parameter
+      lang: "en"
     };
 
-    console.log("Received data:", req.body);
+    console.log("Sending API request with body:", apiBody);
 
     const response = await axios.post(
       'https://ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com/analyzeSymptomsAndDiagnose',
@@ -96,16 +114,17 @@ app.post('/api/predict', authenticateToken, async (req, res) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY, // ✅ secure your key in .env
           'X-RapidAPI-Host': 'ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com'
         }
       }
     );
 
-    // Send the prediction result back to the client
-    res.json({ prediction: response.data.result });
+    const prediction = response.data?.result || response.data;
+
+    res.json({ prediction });
   } catch (error) {
-    console.error("Prediction error:", error);
+    console.error("Prediction error:", error.response?.data || error.message);
     res.status(500).json({ error: 'Prediction failed. Please try again.' });
   }
 });
