@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useUser } from "../context/usercontext";
 import axios from "axios";
-import ResultDisplay from "./ResultDisplay"; // Make sure the path is correct
+import ResultDisplay from "./ResultDisplay";
 
 function SymptomChecker() {
   const { userData } = useUser();
   const [symptoms, setSymptoms] = useState("");
-  const [prediction, setPrediction] = useState("");
+  const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,29 +20,43 @@ function SymptomChecker() {
 
     setLoading(true);
     setError("");
-    setPrediction("");
+    setPrediction(null);
 
     try {
       const response = await axios.post(
-        "https://ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com/ai-medical-diagnosis-api-symptoms-to-results",
+        "https://ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com/analyzeSymptomsAndDiagnose",
         {
-          message: `Age: ${userData.age}, Gender: ${userData.gender}, Symptoms: ${symptoms}`,
-          specialization: "general",
-          language: "en",
+          symptoms: symptoms.split(",").map(s => s.trim()), // Convert comma-separated string to array
+          patientInfo: {
+            age: parseInt(userData.age),
+            gender: userData.gender.toLowerCase(),
+            height: 165,
+            weight: 70,
+            medicalHistory: [],
+            currentMedications: [],
+            allergies: [],
+            lifestyle: {
+              smoking: false,
+              alcohol: "none",
+              exercise: "moderate",
+              diet: "balanced"
+            }
+          },
+          lang: "en"
         },
         {
           headers: {
             "Content-Type": "application/json",
             "X-RapidAPI-Key": "09d5dcf53mshd8ee6635c0504d9p1ab5adjsn197284bdede1",
-            "X-RapidAPI-Host": "ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com",
-          },
+            "X-RapidAPI-Host": "ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com"
+          }
         }
       );
 
-      setPrediction(response.data.response);
+      setPrediction(response.data.result);
     } catch (err) {
-      setError("An error occurred. Please try again.");
       console.error("Prediction error:", err);
+      setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -66,7 +80,7 @@ function SymptomChecker() {
           <textarea
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
             rows="4"
-            placeholder="Describe your symptoms..."
+            placeholder="Describe your symptoms (comma-separated, e.g. headache, fever, fatigue)..."
             value={symptoms}
             onChange={(e) => setSymptoms(e.target.value)}
           ></textarea>
