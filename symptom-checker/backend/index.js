@@ -91,7 +91,7 @@ app.post('/api/predict', authenticateToken, async (req, res) => {
     console.log("Received data:", req.body);
 
     const response = await axios.post(
-      'https://ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com/ai-medical-diagnosis-api-symptoms-to-results',
+      'https://ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com/analyzeSymptomsAndDiagnose',
       apiBody,
       {
         headers: {
