@@ -79,7 +79,7 @@ app.post('/api/predict', authenticateToken, async (req, res) => {
     };
 
     const response = await axios.post(
-      'https://bilgisamapi-api2.p.rapidapi.com/ai-medical-diagnosis-api-symptoms-to-results',
+      'https://ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com/ai-medical-diagnosis-api-symptoms-to-results',
       apiBody,
       {
         headers: {
