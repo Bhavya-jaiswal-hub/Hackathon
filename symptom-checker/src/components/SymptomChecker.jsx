@@ -24,36 +24,31 @@ function SymptomChecker() {
 
     try {
       const response = await axios.post(
-        "https://ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com/analyzeSymptomsAndDiagnose",
+        "/api/predict", // ✅ call your own backend now
         {
-          symptoms: symptoms.split(",").map(s => s.trim()), // Convert comma-separated string to array
-          patientInfo: {
-            age: parseInt(userData.age),
-            gender: userData.gender.toLowerCase(),
-            height: 165,
-            weight: 70,
-            medicalHistory: [],
-            currentMedications: [],
-            allergies: [],
-            lifestyle: {
-              smoking: false,
-              alcohol: "none",
-              exercise: "moderate",
-              diet: "balanced"
-            }
-          },
-          lang: "en"
+          age: userData.age,
+          gender: userData.gender,
+          symptoms: symptoms.split(",").map(s => s.trim()),
+          height: 165,
+          weight: 70,
+          medicalHistory: [],
+          currentMedications: [],
+          allergies: [],
+          lifestyle: {
+            smoking: false,
+            alcohol: "none",
+            exercise: "moderate",
+            diet: "balanced"
+          }
         },
         {
           headers: {
-            "Content-Type": "application/json",
-            "X-RapidAPI-Key": "09d5dcf53mshd8ee6635c0504d9p1ab5adjsn197284bdede1",
-            "X-RapidAPI-Host": "ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com"
+            Authorization: `Bearer ${localStorage.getItem("token")}` // ✅ send your JWT token
           }
         }
       );
 
-      setPrediction(response.data.result);
+      setPrediction(response.data.prediction);
     } catch (err) {
       console.error("Prediction error:", err);
       setError("An error occurred. Please try again.");

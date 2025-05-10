@@ -67,67 +67,6 @@ const authenticateToken = (req, res, next) => {
 
 // ------------------ Routes ------------------
 
-// ✅ Disease Prediction (Protected Route)
-app.post('/api/predict', authenticateToken, async (req, res) => {
-  try {
-    const {
-      age,
-      gender,
-      symptoms,
-      height,
-      weight,
-      medicalHistory,
-      currentMedications,
-      allergies,
-      lifestyle
-    } = req.body;
-
-    if (!age || !gender || !symptoms || !Array.isArray(symptoms) || symptoms.length === 0) {
-      return res.status(400).json({ error: "Age, gender, and at least one symptom are required." });
-    }
-
-    const apiBody = {
-      symptoms: symptoms,
-      patientInfo: {
-        age: parseInt(age),
-        gender: gender.toLowerCase(),
-        height: height || null,
-        weight: weight || null,
-        medicalHistory: medicalHistory || [],
-        currentMedications: currentMedications || [],
-        allergies: allergies || [],
-        lifestyle: lifestyle || {
-          smoking: false,
-          alcohol: "none",
-          exercise: "moderate",
-          diet: "balanced"
-        }
-      },
-      lang: "en"
-    };
-
-    console.log("Sending API request with body:", apiBody);
-
-    const response = await axios.post(
-      'https://ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com/analyzeSymptomsAndDiagnose',
-      apiBody,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY, // ✅ secure your key in .env
-          'X-RapidAPI-Host': 'ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com'
-        }
-      }
-    );
-
-    const prediction = response.data?.result || response.data;
-
-    res.json({ prediction });
-  } catch (error) {
-    console.error("Prediction error:", error.response?.data || error.message);
-    res.status(500).json({ error: 'Prediction failed. Please try again.' });
-  }
-});
 
 
 // ✅ Signup - Send Verification Email
