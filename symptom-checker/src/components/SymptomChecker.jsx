@@ -24,7 +24,7 @@ function SymptomChecker() {
 
     try {
       const response = await axios.post(
-        "https://bilgisamapi-api2.p.rapidapi.com/ai-medical-diagnosis-api-symptoms-to-results",
+        "https://ai-medical-diagnosis-api-symptoms-to-results.p.rapidapi.com/ai-medical-diagnosis-api-symptoms-to-results",
         {
           message: `Age: ${userData.age}, Gender: ${userData.gender}, Symptoms: ${symptoms}`,
           specialization: "general",
