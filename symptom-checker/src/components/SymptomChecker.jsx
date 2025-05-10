@@ -23,35 +23,18 @@ function SymptomChecker() {
     setPrediction(null);
 
     try {
-      const response = await axios.post(
-        "/api/predict", // ✅ call your own backend now
-        {
-          age: userData.age,
-          gender: userData.gender,
-          symptoms: symptoms.split(",").map(s => s.trim()),
-          height: 165,
-          weight: 70,
-          medicalHistory: [],
-          currentMedications: [],
-          allergies: [],
-          lifestyle: {
-            smoking: false,
-            alcohol: "none",
-            exercise: "moderate",
-            diet: "balanced"
-          }
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}` // ✅ send your JWT token
-          }
-        }
-      );
+      const response = await axios.post("https://hackathon-8rnn.onrender.com/api/predict", {
+        age: userData.age,
+        gender: userData.gender,
+        symptoms: symptoms.split(",").map(symptom => symptom.trim()),
+      });
 
-      setPrediction(response.data.prediction);
+      setPrediction(response.data); // Adjust this based on your backend response structure
     } catch (err) {
-      console.error("Prediction error:", err);
-      setError("An error occurred. Please try again.");
+      console.error(err);
+      setError(
+        err.response?.data?.error || "Something went wrong. Please try again."
+      );
     } finally {
       setLoading(false);
     }
