@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useUser } from "../context/usercontext";
 import axios from "axios";
 import ResultDisplay from "./ResultDisplay";
@@ -26,10 +26,15 @@ function SymptomChecker() {
       const response = await axios.post("https://hackathon-8rnn.onrender.com/api/predict", {
         age: userData.age,
         gender: userData.gender,
-        symptoms: symptoms.split(",").map(symptom => symptom.trim()),
+        symptoms: symptoms.split(",").map((s) => s.trim()),
       });
 
-      setPrediction(response.data); // Adjust this based on your backend response structure
+      // Assuming the backend response has a `prediction` field
+      if (response.data.prediction) {
+        setPrediction(response.data.prediction); // Set prediction (string response from backend)
+      } else {
+        setError("Could not get prediction. Please try again.");
+      }
     } catch (err) {
       console.error(err);
       setError(

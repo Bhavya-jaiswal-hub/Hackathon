@@ -1,3 +1,5 @@
+
+
 function ResultDisplay({ prediction }) {
   return (
     <div className="p-4 bg-green-100 shadow-md rounded-md mt-4 text-green-800">

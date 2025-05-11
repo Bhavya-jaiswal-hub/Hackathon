@@ -67,6 +67,52 @@ const authenticateToken = (req, res, next) => {
 
 // ------------------ Routes ------------------
 
+// ✅ Symptom Prediction Route
+app.post("/api/predict", async (req, res) => {
+  const { age, gender, symptoms } = req.body;
+
+  if (!age || !gender || !symptoms || !Array.isArray(symptoms)) {
+    return res.status(400).json({ error: "Missing or invalid input fields." });
+  }
+
+  try {
+    // Dummy data with symptoms to diseases mapping
+    const diseasePrediction = {
+      "fever": "Flu",
+      "headache": "Migraine",
+      "cough": "Common Cold",
+      "nausea": "Gastritis",
+      "fatigue": "Chronic Fatigue Syndrome",
+      "shortness of breath": "Asthma",
+      "sore throat": "Strep Throat",
+    };
+
+    let possibleDiseases = [];
+
+    // Check if any symptom entered matches a known disease
+    symptoms.forEach(symptom => {
+      if (diseasePrediction[symptom.toLowerCase()]) {
+        possibleDiseases.push(diseasePrediction[symptom.toLowerCase()]);
+      }
+    });
+
+    if (possibleDiseases.length > 0) {
+      // Return the possible diseases based on symptoms
+      return res.status(200).json({
+        message: "Possible Diseases Based on Symptoms",
+        prediction: possibleDiseases.join(", "),
+      });
+    } else {
+      // If no matching symptoms found
+      return res.status(200).json({
+        message: "We couldn't find a match for your symptoms. Please consult a doctor for accurate diagnosis.",
+      });
+    }
+  } catch (err) {
+    console.error("Prediction error:", err);
+    res.status(500).json({ error: "Failed to process prediction." });
+  }
+});
 
 
 // ✅ Signup - Send Verification Email
