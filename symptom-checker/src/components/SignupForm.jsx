@@ -11,8 +11,8 @@ const SignupForm = () => {
     confirmPassword: "",
   });
 
-  const [loading, setLoading] = useState(false); // State to manage loading
-  const [errorMessage, setErrorMessage] = useState(""); // State to handle error messages
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -23,10 +23,10 @@ const SignupForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage(""); // Clear previous errors
+    setErrorMessage("");
+
     const { fullName, email, password, confirmPassword } = formData;
 
-    // Basic form validation
     if (!fullName || !email || !password || !confirmPassword) {
       setErrorMessage("Please fill in all fields.");
       return;
@@ -37,39 +37,34 @@ const SignupForm = () => {
       return;
     }
 
-    // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setErrorMessage("Please enter a valid email address.");
       return;
     }
 
-    setLoading(true); // Show loading spinner
+    setLoading(true);
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName,
-          email,
-          password,
-        }),
+        body: JSON.stringify({ fullName, email, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        alert("✅ Verification email sent! Please check your inbox.");
-        navigate("/login");
+        alert("✅ OTP sent to your email. Please verify.");
+        // Pass email through navigation state
+        navigate("/verify-otp", { state: { email } });
       } else {
         setErrorMessage(data.message || "❌ Something went wrong, please try again.");
       }
-      
     } catch (error) {
       setErrorMessage("❌ Error during signup: " + error.message);
     } finally {
-      setLoading(false); // Hide loading spinner after the request
+      setLoading(false);
     }
   };
 
@@ -77,14 +72,13 @@ const SignupForm = () => {
     <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
       <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
         <h2 className="text-2xl font-bold mb-6 text-center text-red-500">Sign Up</h2>
-        
-        {/* Error Message */}
+
         {errorMessage && (
           <div className="text-sm text-red-500 mb-4">
             <p>{errorMessage}</p>
           </div>
         )}
-        
+
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-medium mb-1">Full Name</label>
@@ -137,7 +131,7 @@ const SignupForm = () => {
           <button
             type="submit"
             className="w-full bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 transition duration-300"
-            disabled={loading} // Disable button when loading
+            disabled={loading}
           >
             {loading ? "Signing Up..." : "Create Account"}
           </button>

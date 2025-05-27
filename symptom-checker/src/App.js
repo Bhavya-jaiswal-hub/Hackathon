@@ -8,7 +8,7 @@ import LoginForm from "./components/LoginForm";
 import SymptomChecker from "./components/SymptomChecker";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
-import Verify from './pages/Verify';
+import VerifyOTP from './pages/VerifyOTP';
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // ✅ Protects routes that require login
@@ -38,7 +38,8 @@ function App() {
           <Route path="/login" element={<LoginForm />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/verify" element={<Verify />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
+
 
           {/* Protected Route */}
           <Route

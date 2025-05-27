@@ -6,7 +6,6 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const cors = require("cors");
-const axios = require("axios");
 
 dotenv.config();
 const app = express();
@@ -53,7 +52,7 @@ const User = mongoose.model("User", userSchema);
 // ------------------ JWT Middleware ------------------
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(" ")[1]; // Format: "Bearer <token>"
+  const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) return res.status(401).json({ message: "Access denied. No token provided." });
 
@@ -65,8 +64,6 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// ------------------ Routes ------------------
-
 // ✅ Symptom Prediction Route
 app.post("/api/predict", async (req, res) => {
   const { age, gender, symptoms } = req.body;
@@ -76,7 +73,6 @@ app.post("/api/predict", async (req, res) => {
   }
 
   try {
-    // Dummy data with symptoms to diseases mapping
     const diseasePrediction = {
       "fever": "Flu",
       "headache": "Migraine",
@@ -89,7 +85,6 @@ app.post("/api/predict", async (req, res) => {
 
     let possibleDiseases = [];
 
-    // Check if any symptom entered matches a known disease
     symptoms.forEach(symptom => {
       if (diseasePrediction[symptom.toLowerCase()]) {
         possibleDiseases.push(diseasePrediction[symptom.toLowerCase()]);
@@ -97,13 +92,11 @@ app.post("/api/predict", async (req, res) => {
     });
 
     if (possibleDiseases.length > 0) {
-      // Return the possible diseases based on symptoms
       return res.status(200).json({
         message: "Possible Diseases Based on Symptoms",
         prediction: possibleDiseases.join(", "),
       });
     } else {
-      // If no matching symptoms found
       return res.status(200).json({
         message: "We couldn't find a match for your symptoms. Please consult a doctor for accurate diagnosis.",
       });
@@ -114,8 +107,7 @@ app.post("/api/predict", async (req, res) => {
   }
 });
 
-
-// ✅ Signup - Send Verification Email
+// ✅ Signup (OTP-based email verification)
 app.post("/api/signup", async (req, res) => {
   const { fullName, email, password } = req.body;
 
@@ -123,53 +115,62 @@ app.post("/api/signup", async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: "Email already exists" });
 
-    const token = jwt.sign(
-      { fullName, email, password },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = Date.now() + 10 * 60 * 1000;
 
-    const verificationLink = `https://hackathon-tau-bay.vercel.app/verify?token=${token}`;
+    const newUser = new User({ fullName, email, password: hashedPassword, otp, otpExpiry });
+    await newUser.save();
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Verify Your Email',
+      subject: 'Verify Your Email (OTP)',
       html: `<p>Hello ${fullName},</p>
-             <p>Click the link below to verify your email and complete your signup:</p>
-             <a href="${verificationLink}">${verificationLink}</a>
-             <p>This link expires in 15 minutes.</p>`
+             <p>Your OTP for email verification is: <b>${otp}</b></p>
+             <p>This OTP will expire in 10 minutes.</p>`,
     });
 
-    res.status(200).json({ message: "Verification email sent. Please check your inbox." });
+    // Schedule deletion after 10 minutes if not verified
+    setTimeout(async () => {
+      const user = await User.findOne({ email });
+      if (user && user.otp && Date.now() > user.otpExpiry) {
+        await User.deleteOne({ email });
+        console.log(`🗑️ Unverified user ${email} deleted due to expired OTP`);
+      }
+    }, 10 * 60 * 1000 + 1000);
+
+    res.status(200).json({ message: "OTP sent to email. Please verify to complete signup." });
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-// ✅ Verify Email
-app.post("/api/verify-email", async (req, res) => {
-  const { token } = req.body;
+// ✅ Verify OTP
+app.post("/api/verify-otp", async (req, res) => {
+  const { email, otp } = req.body;
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { fullName, email, password } = decoded;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
+    if (user.otp !== otp || Date.now() > user.otpExpiry) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ fullName, email, password: hashedPassword });
-    await newUser.save();
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save();
 
-    res.status(201).json({ message: "Email verified and user created!" });
+    res.status(200).json({ message: "Email verified and user registered successfully" });
   } catch (err) {
-    res.status(400).json({ message: "Invalid or expired token", error: err.message });
+    console.error("OTP verification error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-// ✅ Email/Password Login
+// ✅ Login
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -254,7 +255,7 @@ app.post("/api/reset-password/:token", async (req, res) => {
   }
 });
 
-// ✅ Send OTP for Login
+// ✅ OTP Login
 app.post("/api/send-otp", async (req, res) => {
   const { email } = req.body;
 
@@ -282,7 +283,6 @@ app.post("/api/send-otp", async (req, res) => {
   }
 });
 
-// ✅ OTP Login
 app.post("/api/login-with-otp", async (req, res) => {
   const { email, otp } = req.body;
 
