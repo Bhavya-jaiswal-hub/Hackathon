@@ -1,6 +1,17 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-   
+/* 🔽 Paste custom classes below */
+.input {
+  @apply w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400;
+}
+.btn-red {
+  @apply w-full bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 transition duration-300;
+}
+.btn-blue {
+  @apply w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition duration-300;
+}
+.btn-green {
+  @apply w-full bg-green-500 text-white py-2 rounded-lg font-semibold hover:bg-green-600 transition duration-300;
+}
