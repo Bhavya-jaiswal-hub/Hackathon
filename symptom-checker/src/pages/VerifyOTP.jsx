@@ -93,7 +93,7 @@ const VerifyOTP = () => {
             disabled={loading}
             className="w-full bg-purple-600 text-white py-2 rounded-xl font-semibold hover:bg-purple-700 transition duration-300"
           >
-            {loading ? "Verifying..." : "Get OTP"}
+            {loading ? "Verifying..." : "Verify OTP"}
           </button>
         </form>
 
