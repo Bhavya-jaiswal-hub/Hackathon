@@ -81,6 +81,14 @@ app.post("/api/predict", async (req, res) => {
       "fatigue": "Chronic Fatigue Syndrome",
       "shortness of breath": "Asthma",
       "sore throat": "Strep Throat",
+      "chest pain" : "pneumonia", 
+      "vomiting" : "Food Poisoning",
+      "diarrhea" : "Gastroenteritis",
+      "rash" : "Allergic Reaction",
+      "fever, chills" : "COVID - 19",
+      "muscle pain" : "Influenza",
+      "joint pain" : "Arthritis",
+      "runny nose" : "Sinusitis"
     };
 
     let possibleDiseases = [];
