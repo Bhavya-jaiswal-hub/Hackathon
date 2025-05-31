@@ -93,47 +93,54 @@ const LoginForm = () => {
     }
   };
 
-  return (
-    <div className="flex flex-col md:flex-row min-h-screen">
-      <div className="hidden md:flex w-1/2 bg-cover bg-center" style={{ backgroundImage: "url('/healthcare-bg.jpg')" }} />
-      <div className="w-full md:w-1/2 flex justify-center items-center bg-gray-100 px-4 py-12">
-        <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 text-center text-red-500">
-            {isOtpMode ? "Login with OTP" : "Login"}
-          </h2>
+ return (
+  <div className="relative min-h-screen flex items-center justify-center">
+    {/* Background image */}
+    <div
+      className="absolute inset-0 bg-cover bg-center z-0"
+      style={{ backgroundImage: "url('/healthcare-bg.jpg')" }}
+    ></div>
 
-          {!isOtpMode ? (
-            <form className="space-y-4" onSubmit={handleLogin}>
-              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="input" />
-              <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Password" className="input" />
-              <div className="text-right">
-                <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">Forgot Password?</Link>
-              </div>
-              <button type="submit" disabled={loading} className="btn-red">{loading ? "Logging in..." : "Login"}</button>
-            </form>
-          ) : (
-            <div className="space-y-4">
-              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="input" />
-              {step === 1 ? (
-                <button onClick={handleSendOtp} disabled={loading} className="btn-blue">{loading ? "Sending OTP..." : "Send OTP"}</button>
-              ) : (
-                <>
-                  <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter OTP" className="input" />
-                  <button onClick={handleVerifyOtp} disabled={loading} className="btn-green">{loading ? "Verifying..." : "Verify & Login"}</button>
-                </>
-              )}
-            </div>
-          )}
+    {/* Optional dark overlay */}
+    <div className="absolute inset-0 bg-black/40 z-10"></div>
 
-          <div className="text-center mt-4">
-            <button onClick={() => { setIsOtpMode((prev) => !prev); setStep(1); setOtp(""); }} className="text-sm text-blue-600 hover:underline">
-              {isOtpMode ? "← Login with password" : "Login with OTP instead"}
-            </button>
+    {/* Login Form */}
+    <div className="relative z-20 w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
+      <h2 className="text-2xl font-bold mb-6 text-center text-red-500">
+        {isOtpMode ? "Login with OTP" : "Login"}
+      </h2>
+
+      {!isOtpMode ? (
+        <form className="space-y-4" onSubmit={handleLogin}>
+          <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="input" />
+          <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Password" className="input" />
+          <div className="text-right">
+            <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">Forgot Password?</Link>
           </div>
+          <button type="submit" disabled={loading} className="btn-red">{loading ? "Logging in..." : "Login"}</button>
+        </form>
+      ) : (
+        <div className="space-y-4">
+          <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="input" />
+          {step === 1 ? (
+            <button onClick={handleSendOtp} disabled={loading} className="btn-blue">{loading ? "Sending OTP..." : "Send OTP"}</button>
+          ) : (
+            <>
+              <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter OTP" className="input" />
+              <button onClick={handleVerifyOtp} disabled={loading} className="btn-green">{loading ? "Verifying..." : "Verify & Login"}</button>
+            </>
+          )}
         </div>
+      )}
+
+      <div className="text-center mt-4">
+        <button onClick={() => { setIsOtpMode((prev) => !prev); setStep(1); setOtp(""); }} className="text-sm text-blue-600 hover:underline">
+          {isOtpMode ? "← Login with password" : "Login with OTP instead"}
+        </button>
       </div>
     </div>
-  );
-};
+  </div>
+);
+
 
 export default LoginForm;

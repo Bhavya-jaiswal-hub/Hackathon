@@ -62,24 +62,31 @@ const SignupForm = () => {
     }
   };
 
-  return (
-    <div className="flex flex-col md:flex-row min-h-screen">
-      <div className="hidden md:flex w-1/2 bg-cover bg-center" style={{ backgroundImage: "url('/healthcare-bg.jpg')" }} />
-      <div className="w-full md:w-1/2 flex justify-center items-center bg-gray-100 px-4 py-12">
-        <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 text-center text-red-500">Sign Up</h2>
-          {errorMessage && <p className="text-sm text-red-500 mb-4">{errorMessage}</p>}
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Full Name" className="input" />
-            <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email Address" className="input" />
-            <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Password" className="input" />
-            <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm Password" className="input" />
-            <button type="submit" disabled={loading} className="btn-red">{loading ? "Signing Up..." : "Create Account"}</button>
-          </form>
-        </div>
-      </div>
+ return (
+  <div className="relative min-h-screen flex items-center justify-center">
+    {/* Background image */}
+    <div
+      className="absolute inset-0 bg-cover bg-center z-0"
+      style={{ backgroundImage: "url('/healthcare-bg.jpg')" }}
+    ></div>
+
+    {/* Optional dark overlay */}
+    <div className="absolute inset-0 bg-black/40 z-10"></div>
+
+    {/* Signup Form */}
+    <div className="relative z-20 w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
+      <h2 className="text-2xl font-bold mb-6 text-center text-red-500">Sign Up</h2>
+      {errorMessage && <p className="text-sm text-red-500 mb-4">{errorMessage}</p>}
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Full Name" className="input" />
+        <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email Address" className="input" />
+        <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Password" className="input" />
+        <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm Password" className="input" />
+        <button type="submit" disabled={loading} className="btn-red">{loading ? "Signing Up..." : "Create Account"}</button>
+      </form>
     </div>
-  );
-};
+  </div>
+);
+
 
 export default SignupForm;
