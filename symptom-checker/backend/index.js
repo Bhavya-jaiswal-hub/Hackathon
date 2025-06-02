@@ -342,6 +342,11 @@ app.use((err, req, res, next) => {
   console.error("🔥 Global error handler:", err.stack);
   res.status(500).json({ message: "Internal server error", error: err.message });
 });
+app._router.stack.forEach((middleware) => {
+  if (middleware.route) {
+    console.log("🛣️ Route:", middleware.route.path);
+  }
+});
 
 // ✅ Start Server
 app.listen(PORT, () => {
