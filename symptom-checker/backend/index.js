@@ -11,10 +11,23 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const allowedOrigins = [
+  "http://localhost:5173", // for local frontend dev
+  "https://hackathon-tau-bay.vercel.app", // your deployed frontend
+];
+
 app.use(cors({
-  origin: "https://hackathon-tau-bay.vercel.app",
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
+  },
   credentials: true,
 }));
+app.options("*", cors());
+
+
 app.use(express.json());
 
 // ------------------ MongoDB Connection ------------------
