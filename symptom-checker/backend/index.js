@@ -25,7 +25,8 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.options("*", cors());
+// app.options("*", cors({ origin: allowedOrigins, credentials: true })); // Define explicitly
+
 
 
 
@@ -338,14 +339,21 @@ app.post("/api/login-with-otp", async (req, res) => {
   }
 });
 
-// ✅ Global Error Handler
+// // ✅ Global Error Handler
 app.use((err, req, res, next) => {
   console.error("🔥 Global error handler:", err.stack);
   res.status(500).json({ message: "Internal server error", error: err.message });
 });
-app.use("*", (req, res) => {
-  res.status(404).json({ message: "Route not found", path: req.originalUrl });
+// Catch-all route handler (MUST be last)
+app.use((req, res) => {
+  res.status(404).json({
+    message: "Route not found",
+    path: req.originalUrl,
+  });
 });
+
+
+
 
 // app._router.stack.forEach((middleware) => {
 //   if (middleware.route) {
