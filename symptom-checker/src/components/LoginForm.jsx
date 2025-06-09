@@ -37,7 +37,7 @@ const LoginForm = () => {
         login(data.token, { email });
         navigate("/");
       } else {
-        alert("❌ " + data.message);
+        alert("❌ " + (data.message || "Login failed"));
       }
     } catch (error) {
       alert("❌ Login failed: " + error.message);
@@ -60,7 +60,7 @@ const LoginForm = () => {
         alert("📧 OTP sent to your email.");
         setStep(2);
       } else {
-        alert("❌ " + data.message);
+        alert("❌ " + (data.message || "OTP sending failed"));
       }
     } catch (error) {
       alert("❌ Failed to send OTP: " + error.message);
@@ -69,7 +69,8 @@ const LoginForm = () => {
     }
   };
 
-  const handleVerifyOtp = async () => {
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
     if (!otp) return alert("Please enter OTP");
     try {
       setLoading(true);
@@ -84,7 +85,7 @@ const LoginForm = () => {
         login(data.token, { email: formData.email });
         navigate("/");
       } else {
-        alert("❌ " + data.message);
+        alert("❌ " + (data.message || "OTP verification failed"));
       }
     } catch (error) {
       alert("❌ OTP verification failed: " + error.message);
@@ -93,55 +94,108 @@ const LoginForm = () => {
     }
   };
 
- return (
-  <div className="relative min-h-screen flex items-center justify-center">
-    {/* Background image */}
-    <div
-      className="absolute inset-0 bg-cover bg-center z-0"
-      style={{ backgroundImage: "url('/healthcare-bg.jpg')" }}
-    ></div>
+  return (
+    <div className="relative min-h-screen flex items-center justify-center">
+      {/* Background image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center z-0"
+        style={{ backgroundImage: "url('/healthcare-bg.jpg')" }}
+      ></div>
 
-    {/* Optional dark overlay */}
-    <div className="absolute inset-0 bg-black/40 z-10"></div>
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/40 z-10"></div>
 
-    {/* Login Form */}
-    <div className="relative z-20 w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center text-red-500">
-        {isOtpMode ? "Login with OTP" : "Login"}
-      </h2>
+      {/* Login Form */}
+      <div className="relative z-20 w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
+        <h2 className="text-2xl font-bold mb-6 text-center text-red-500">
+          {isOtpMode ? "Login with OTP" : "Login"}
+        </h2>
 
-      {!isOtpMode ? (
-        <form className="space-y-4" onSubmit={handleLogin}>
-          <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="input" />
-          <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Password" className="input" />
-          <div className="text-right">
-            <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">Forgot Password?</Link>
-          </div>
-          <button type="submit" disabled={loading} className="btn-red">{loading ? "Logging in..." : "Login"}</button>
-        </form>
-      ) : (
-        <div className="space-y-4">
-          <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="input" />
-          {step === 1 ? (
-            <button onClick={handleSendOtp} disabled={loading} className="btn-blue">{loading ? "Sending OTP..." : "Send OTP"}</button>
-          ) : (
-            <>
-              <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter OTP" className="input" />
-              <button onClick={handleVerifyOtp} disabled={loading} className="btn-green">{loading ? "Verifying..." : "Verify & Login"}</button>
-            </>
-          )}
+        {!isOtpMode ? (
+          <form className="space-y-4" onSubmit={handleLogin}>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Email"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Password"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            <div className="text-right">
+              <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600 transition"
+            >
+              {loading ? "Logging in..." : "Login"}
+            </button>
+          </form>
+        ) : (
+          <>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Email"
+              className="w-full p-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {step === 1 ? (
+              <button
+                onClick={handleSendOtp}
+                disabled={loading}
+                className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition"
+              >
+                {loading ? "Sending OTP..." : "Send OTP"}
+              </button>
+            ) : (
+              <form className="space-y-4" onSubmit={handleVerifyOtp}>
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="Enter OTP"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition"
+                >
+                  {loading ? "Verifying..." : "Verify & Login"}
+                </button>
+              </form>
+            )}
+          </>
+        )}
+
+        <div className="text-center mt-4">
+          <button
+            onClick={() => {
+              setIsOtpMode((prev) => !prev);
+              setStep(1);
+              setOtp("");
+            }}
+            className="text-sm text-blue-600 hover:underline"
+          >
+            {isOtpMode ? "← Login with password" : "Login with OTP instead"}
+          </button>
         </div>
-      )}
-
-      <div className="text-center mt-4">
-        <button onClick={() => { setIsOtpMode((prev) => !prev); setStep(1); setOtp(""); }} className="text-sm text-blue-600 hover:underline">
-          {isOtpMode ? "← Login with password" : "Login with OTP instead"}
-        </button>
       </div>
     </div>
-  </div>
-);
+  );
 };
-
 
 export default LoginForm;

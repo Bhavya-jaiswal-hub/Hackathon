@@ -9,6 +9,10 @@ import SymptomChecker from "./components/SymptomChecker";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
 import VerifyOTP from './pages/VerifyOTP';
+
+import NearbyHospitals from './components/NearbyHospitals';  // ✅ updated path
+import HospitalMap from './components/HospitalMap';          // ✅ updated path
+
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // ✅ Protects routes that require login
@@ -40,11 +44,18 @@ function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
 
-
-          {/* Protected Route */}
+          {/* Protected Routes */}
           <Route
             path="/check"
             element={<PrivateRoute element={<SymptomChecker />} />}
+          />
+          <Route
+            path="/nearby-hospitals"
+            element={<PrivateRoute element={<NearbyHospitals />} />} // ✅
+          />
+          <Route
+            path="/hospital-map"
+            element={<PrivateRoute element={<HospitalMap />} />} // ✅
           />
         </Routes>
       </div>

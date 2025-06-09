@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useUser } from "../context/usercontext";
 import axios from "axios";
-import ResultDisplay from "./ResultDisplay";
+import { useNavigate } from "react-router-dom";
 
 function SymptomChecker() {
   const { userData } = useUser();
@@ -9,13 +9,12 @@ function SymptomChecker() {
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
   const [location, setLocation] = useState({ latitude: null, longitude: null });
   const [locationError, setLocationError] = useState("");
 
+  const navigate = useNavigate();
   const isUserInfoComplete = userData.age && userData.gender;
 
-  // Get geolocation on component mount
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -36,10 +35,8 @@ function SymptomChecker() {
   }, []);
 
   const handlePredict = async () => {
-    if (!symptoms) {
-      alert("Please enter your symptoms.");
-      return;
-    }
+    if (!symptoms) return alert("Please enter your symptoms.");
+    if (!isUserInfoComplete) return alert("Please complete your profile first.");
 
     setLoading(true);
     setError("");
@@ -50,7 +47,7 @@ function SymptomChecker() {
         age: userData.age,
         gender: userData.gender,
         symptoms: symptoms.split(",").map((s) => s.trim()),
-        location, // Send location to backend (optional for now)
+        location,
       });
 
       if (response.data.prediction) {
@@ -66,11 +63,17 @@ function SymptomChecker() {
     }
   };
 
+  const handleFindHospitals = () => {
+    if (!location.latitude || !location.longitude) {
+      alert("Location is not available to find nearby hospitals.");
+      return;
+    }
+    navigate(`/nearby-hospitals?lat=${location.latitude}&lng=${location.longitude}`);
+  };
+
   return (
     <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-4 text-center text-red-600">
-        Symptom Checker
-      </h2>
+      <h2 className="text-2xl font-bold mb-4 text-center text-red-600">Symptom Checker</h2>
 
       <p className="text-gray-700 mb-1">Age: {userData.age || "Not provided"}</p>
       <p className="text-gray-700 mb-2">Gender: {userData.gender || "Not provided"}</p>
@@ -113,7 +116,19 @@ function SymptomChecker() {
         <div className="mt-4 bg-red-100 p-3 rounded-md text-red-700">{error}</div>
       )}
 
-      {prediction && <ResultDisplay prediction={prediction} />}
+      {prediction && (
+        <>
+          <div className="mt-4 bg-green-100 p-3 rounded-md text-green-700">
+            <strong>Predicted Disease:</strong> {prediction}
+          </div>
+          <button
+            className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition duration-300"
+            onClick={handleFindHospitals}
+          >
+            Find Nearby Hospitals
+          </button>
+        </>
+      )}
     </div>
   );
 }
