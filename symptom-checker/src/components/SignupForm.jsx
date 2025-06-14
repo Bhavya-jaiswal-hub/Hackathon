@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const SignupForm = () => {
   const navigate = useNavigate();
@@ -12,7 +12,6 @@ const SignupForm = () => {
   });
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -52,13 +51,8 @@ const SignupForm = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setShowSuccess(true);
-
-        // ⏳ Wait 2 seconds to show animation before navigating
-        setTimeout(() => {
-          setShowSuccess(false); // hide animation (optional)
-          navigate("/verify-otp", { state: { email } });
-        }, 2000);
+        // ✅ Navigate to the animation success page, passing the email
+        navigate("/signup-success", { state: { email } });
       } else {
         setErrorMessage(data.message || "❌ Something went wrong, please try again.");
       }
@@ -69,7 +63,6 @@ const SignupForm = () => {
     }
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0, y: 30 },
     visible: {
@@ -176,29 +169,6 @@ const SignupForm = () => {
           </motion.div>
         </motion.form>
       </motion.div>
-
-      {/* ✅ Success Animation */}
-      <AnimatePresence>
-        {showSuccess && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-white shadow-xl rounded-xl px-6 py-4 text-green-600 flex flex-col items-center"
-          >
-            <motion.div
-              initial={{ rotate: -90 }}
-              animate={{ rotate: 0 }}
-              transition={{ duration: 0.4 }}
-              className="text-4xl"
-            >
-              ✅
-            </motion.div>
-            <p className="text-lg font-semibold mt-2">OTP sent! Please check your email.</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

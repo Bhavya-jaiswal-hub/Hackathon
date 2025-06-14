@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const VerifyOTP = () => {
@@ -7,10 +7,16 @@ const VerifyOTP = () => {
   const emailFromState = location.state?.email || "";
 
   const [otp, setOtp] = useState("");
-  const [email, setEmail] = useState(emailFromState);
+ const [email] = useState(emailFromState);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!emailFromState) {
+      setError("❌ No email found. Please go back to signup.");
+    }
+  }, [emailFromState]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,15 +56,16 @@ const VerifyOTP = () => {
       <div className="w-full max-w-sm bg-white p-6 rounded-3xl shadow-xl text-center">
         {/* Image */}
         <img
-          src="/bannerimage2.jpg" // Replace with your image URL if needed
+          src="/bannerimage2.jpg"
           alt="OTP Illustration"
           className="w-40 h-40 mx-auto mb-6"
         />
 
-        {/* Title and subtitle */}
+        {/* Title */}
         <h2 className="text-2xl font-bold text-black mb-2">OTP Verification</h2>
-        <p className="text-gray-500 text-sm mb-6">We will send you a One Time Password on this email</p>
+        <p className="text-gray-500 text-sm mb-6">A One Time Password has been sent to your email.</p>
 
+        {/* Messages */}
         {message && <p className="text-green-600 text-sm mb-4">{message}</p>}
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
@@ -68,11 +75,9 @@ const VerifyOTP = () => {
             <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
             <input
               type="email"
-              name="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+              readOnly
+              className="w-full px-4 py-2 border-2 border-purple-300 rounded-xl bg-gray-100 cursor-not-allowed text-gray-600"
             />
           </div>
 
@@ -84,13 +89,14 @@ const VerifyOTP = () => {
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               placeholder="Enter the OTP"
+              autoFocus
               className="w-full px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !email}
             className="w-full bg-purple-600 text-white py-2 rounded-xl font-semibold hover:bg-purple-700 transition duration-300"
           >
             {loading ? "Verifying..." : "Verify OTP"}
@@ -99,12 +105,12 @@ const VerifyOTP = () => {
 
         {/* Footer */}
         <p className="mt-6 text-sm text-gray-500">
-          Don’t have an account?{" "}
+          Didn’t receive the code?{" "}
           <span
-            className="text-purple-600 font-semibold cursor-pointer hover:underline"
             onClick={() => navigate("/signup")}
+            className="text-purple-600 font-semibold cursor-pointer hover:underline"
           >
-            Sign Up
+            Sign up again
           </span>
         </p>
       </div>
