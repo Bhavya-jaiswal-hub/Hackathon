@@ -1,136 +1,201 @@
-import { useState, useEffect } from "react";
-import { useUser } from "../context/usercontext";
-import axios from "axios";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
-function SymptomChecker() {
-  const { userData } = useUser();
-  const [symptoms, setSymptoms] = useState("");
-  const [prediction, setPrediction] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [location, setLocation] = useState({ latitude: null, longitude: null });
-  const [locationError, setLocationError] = useState("");
-
+const SignupForm = () => {
   const navigate = useNavigate();
-  const isUserInfoComplete = userData.age && userData.gender;
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  useEffect(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-        },
-        (err) => {
-          console.warn("Geolocation error:", err.message);
-          setLocationError("Could not access your location. Please allow location access.");
-        }
-      );
-    } else {
-      setLocationError("Geolocation is not supported by your browser.");
+  const handleChange = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage("");
+
+    const { fullName, email, password, confirmPassword } = formData;
+
+    if (!fullName || !email || !password || !confirmPassword) {
+      setErrorMessage("Please fill in all fields.");
+      return;
     }
-  }, []);
 
-  const handlePredict = async () => {
-    if (!symptoms) return alert("Please enter your symptoms.");
-    if (!isUserInfoComplete) return alert("Please complete your profile first.");
+    if (password !== confirmPassword) {
+      setErrorMessage("Passwords do not match!");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
 
     setLoading(true);
-    setError("");
-    setPrediction(null);
 
     try {
-      const response = await axios.post("https://hackathon-8rnn.onrender.com/api/predict", {
-        age: userData.age,
-        gender: userData.gender,
-        symptoms: symptoms.split(",").map((s) => s.trim()),
-        location,
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, email, password }),
       });
 
-      if (response.data.prediction) {
-        setPrediction(response.data.prediction);
+      const data = await response.json();
+
+      if (response.ok) {
+        setShowSuccess(true);
+        setTimeout(() => {
+          navigate("/verify-otp", { state: { email } });
+        }, 2000); // Wait 2 seconds before navigating
       } else {
-        setError("Could not get prediction. Please try again.");
+        setErrorMessage(data.message || "❌ Something went wrong, please try again.");
       }
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || "Something went wrong. Please try again.");
+    } catch (error) {
+      setErrorMessage("❌ Error during signup: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFindHospitals = () => {
-    if (!location.latitude || !location.longitude) {
-      alert("Location is not available to find nearby hospitals.");
-      return;
-    }
-    navigate(`/nearby-hospitals?lat=${location.latitude}&lng=${location.longitude}`);
+  const containerVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, when: "beforeChildren", staggerChildren: 0.1 },
+    },
+  };
+
+  const inputVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { opacity: 1, x: 0 },
   };
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-4 text-center text-red-600">Symptom Checker</h2>
+    <div className="relative min-h-screen flex items-center justify-center">
+      {/* Background */}
+      <div
+        className="absolute inset-0 bg-cover bg-center z-0"
+        style={{ backgroundImage: "url('/healthcare-bg.jpg')" }}
+      />
+      <div className="absolute inset-0 bg-black/40 z-10" />
 
-      <p className="text-gray-700 mb-1">Age: {userData.age || "Not provided"}</p>
-      <p className="text-gray-700 mb-2">Gender: {userData.gender || "Not provided"}</p>
+      {/* Signup Form */}
+      <motion.div
+        className="relative z-20 w-full max-w-md bg-white p-6 rounded-2xl shadow-lg"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <h2 className="text-2xl font-bold mb-6 text-center text-red-500">Sign Up</h2>
 
-      {location.latitude && location.longitude && (
-        <p className="text-green-700 text-sm mb-4">
-          📍 Your Location: {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-        </p>
-      )}
-
-      {locationError && (
-        <p className="text-red-500 text-sm mb-4">{locationError}</p>
-      )}
-
-      {!isUserInfoComplete ? (
-        <div className="text-red-500 text-center font-semibold">
-          Please enter your age and gender in your profile before using the Symptom Checker.
-        </div>
-      ) : (
-        <>
-          <textarea
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-            rows="4"
-            placeholder="Describe your symptoms (comma-separated, e.g. headache, fever, fatigue)..."
-            value={symptoms}
-            onChange={(e) => setSymptoms(e.target.value)}
-          ></textarea>
-
-          <button
-            className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-md transition duration-300"
-            onClick={handlePredict}
-            disabled={loading}
+        {errorMessage && (
+          <motion.p
+            className="text-sm text-red-500 mb-4"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
           >
-            {loading ? "Predicting..." : "Predict Disease"}
-          </button>
-        </>
-      )}
+            {errorMessage}
+          </motion.p>
+        )}
 
-      {error && (
-        <div className="mt-4 bg-red-100 p-3 rounded-md text-red-700">{error}</div>
-      )}
+        <motion.form className="space-y-4" onSubmit={handleSubmit} variants={containerVariants}>
+          <motion.div variants={inputVariants}>
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              placeholder="Full Name"
+              className="input"
+            />
+          </motion.div>
+          <motion.div variants={inputVariants}>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Email Address"
+              className="input"
+            />
+          </motion.div>
+          <motion.div variants={inputVariants}>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Password"
+              className="input"
+            />
+          </motion.div>
+          <motion.div variants={inputVariants}>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Confirm Password"
+              className="input"
+            />
+          </motion.div>
+          <motion.div variants={inputVariants}>
+            <motion.button
+              type="submit"
+              disabled={loading}
+              className="btn-red"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {loading ? "Signing Up..." : "Create Account"}
+            </motion.button>
+          </motion.div>
+        </motion.form>
+      </motion.div>
 
-      {prediction && (
-        <>
-          <div className="mt-4 bg-green-100 p-3 rounded-md text-green-700">
-            <strong>Predicted Disease:</strong> {prediction}
-          </div>
-          <button
-            className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition duration-300"
-            onClick={handleFindHospitals}
+      {/* ✅ Success Animation Overlay */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            className="absolute inset-0 z-30 flex items-center justify-center bg-black/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            Find Nearby Hospitals
-          </button>
-        </>
-      )}
+            <motion.div
+              className="bg-white rounded-xl p-6 flex flex-col items-center shadow-xl"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <motion.div
+                initial={{ rotate: -90 }}
+                animate={{ rotate: 0 }}
+                transition={{ duration: 0.4 }}
+                className="text-5xl text-green-500"
+              >
+                ✅
+              </motion.div>
+              <p className="text-lg font-semibold mt-2 text-center text-green-600">
+                OTP sent successfully! Check your email.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-}
+};
 
-export default SymptomChecker;
+export default SignupForm;
