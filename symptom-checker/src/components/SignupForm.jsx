@@ -157,15 +157,42 @@ const SignupForm = () => {
           </motion.div>
 
           <motion.div variants={inputVariants}>
-            <motion.button
-              type="submit"
-              disabled={loading}
-              className="btn-red"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {loading ? "Signing Up..." : "Create Account"}
-            </motion.button>
+           <motion.button
+  type="submit"
+  disabled={loading}
+  className="btn-red flex items-center justify-center gap-2"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+>
+  {loading ? (
+    <>
+      <svg
+        className="animate-spin h-5 w-5 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v8z"
+        />
+      </svg>
+      <span>Signing Up...</span>
+    </>
+  ) : (
+    "Create Account"
+  )}
+</motion.button>
+
           </motion.div>
         </motion.form>
       </motion.div>

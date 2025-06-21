@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { motion } from "framer-motion";
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -94,6 +95,24 @@ const LoginForm = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        when: "beforeChildren",
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const inputVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { opacity: 1, x: 0 },
+  };
+
   return (
     <div className="relative min-h-screen flex items-center justify-center">
       {/* Background image */}
@@ -106,14 +125,20 @@ const LoginForm = () => {
       <div className="absolute inset-0 bg-black/40 z-10"></div>
 
       {/* Login Form */}
-      <div className="relative z-20 w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
+      <motion.div
+        className="relative z-20 w-full max-w-md bg-white p-6 rounded-2xl shadow-lg"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <h2 className="text-2xl font-bold mb-6 text-center text-red-500">
           {isOtpMode ? "Login with OTP" : "Login"}
         </h2>
 
         {!isOtpMode ? (
-          <form className="space-y-4" onSubmit={handleLogin}>
-            <input
+          <motion.form className="space-y-4" onSubmit={handleLogin} variants={containerVariants}>
+            <motion.input
+              variants={inputVariants}
               type="email"
               name="email"
               value={formData.email}
@@ -121,7 +146,8 @@ const LoginForm = () => {
               placeholder="Email"
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-            <input
+            <motion.input
+              variants={inputVariants}
               type="password"
               name="password"
               value={formData.password}
@@ -134,51 +160,68 @@ const LoginForm = () => {
                 Forgot Password?
               </Link>
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600 transition"
-            >
-              {loading ? "Logging in..." : "Login"}
-            </button>
-          </form>
+           <motion.button
+  type="submit"
+  disabled={loading}
+  className="w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600 transition"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+>
+  {loading ? (
+    <div className="w-5 h-5 border-2 border-t-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+  ) : "Login"}
+</motion.button>
+
+          </motion.form>
         ) : (
-          <>
-            <input
+          <motion.div className="space-y-4" variants={containerVariants} initial="hidden" animate="visible">
+            <motion.input
+              variants={inputVariants}
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="Email"
-              className="w-full p-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             {step === 1 ? (
-              <button
-                onClick={handleSendOtp}
-                disabled={loading}
-                className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition"
-              >
-                {loading ? "Sending OTP..." : "Send OTP"}
-              </button>
+             <motion.button
+  onClick={handleSendOtp}
+  disabled={loading}
+  className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+>
+  {loading ? (
+    <div className="w-5 h-5 border-2 border-t-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+  ) : "Send OTP"}
+</motion.button>
+
             ) : (
-              <form className="space-y-4" onSubmit={handleVerifyOtp}>
-                <input
+              <motion.form className="space-y-4" onSubmit={handleVerifyOtp}>
+                <motion.input
+                  variants={inputVariants}
                   type="text"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   placeholder="Enter OTP"
                   className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition"
-                >
-                  {loading ? "Verifying..." : "Verify & Login"}
-                </button>
-              </form>
+               <motion.button
+  type="submit"
+  disabled={loading}
+  className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+>
+  {loading ? (
+    <div className="w-5 h-5 border-2 border-t-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+  ) : "Verify & Login"}
+</motion.button>
+
+              </motion.form>
             )}
-          </>
+          </motion.div>
         )}
 
         <div className="text-center mt-4">
@@ -193,7 +236,7 @@ const LoginForm = () => {
             {isOtpMode ? "← Login with password" : "Login with OTP instead"}
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

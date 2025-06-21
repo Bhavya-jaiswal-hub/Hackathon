@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FaBars } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Typewriter } from "react-simple-typewriter";
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
@@ -45,7 +46,21 @@ const Navbar = () => {
         {/* Logo */}
         <div className="text-red-500 font-bold text-xl flex-shrink-0">
           <Link to="/">
-            <h1>Symptom Checker</h1>
+           <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-red-500">
+  <span className="mr-2">|</span>
+  <span className="text-red-500">
+    <Typewriter
+      words={['Symptom Checker']}
+      loop={0} // 0 = infinite
+      cursor
+      cursorStyle="_"
+      typeSpeed={100}
+      deleteSpeed={60}
+      delaySpeed={1500}
+    />
+  </span>
+</h1>
+
           </Link>
         </div>
 
