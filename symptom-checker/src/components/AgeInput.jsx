@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "../context/usercontext"; // ✅ Updated
+import { useUser } from "../context/usercontext";
 
 function AgeInput() {
   const [age, setAge] = useState("");
@@ -9,7 +9,7 @@ function AgeInput() {
   const [showAgeDropdown, setShowAgeDropdown] = useState(false);
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
 
-  const { setUserData } = useUser(); // ✅ Updated
+  const { setUserData } = useUser();
   const navigate = useNavigate();
 
   const ages = Array.from({ length: 100 }, (_, i) => i + 1);
@@ -21,10 +21,7 @@ function AgeInput() {
       return;
     }
 
-    // ✅ Save to global context
     setUserData({ age, gender });
-
-    // ✅ Navigate to symptom checker page
     navigate("/check");
   };
 

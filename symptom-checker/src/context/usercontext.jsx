@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useState } from "react";
 
-// Create the context
+// Create context
 const UserContext = createContext();
 
-// Create the provider component
+// Provider component
 export const UserProvider = ({ children }) => {
-  const [userData, setUserData] = useState({ age: "", gender: "" });
+  const [userData, setUserData] = useState({
+    age: null,
+    gender: null,
+  });
 
   return (
     <UserContext.Provider value={{ userData, setUserData }}>
@@ -14,5 +17,11 @@ export const UserProvider = ({ children }) => {
   );
 };
 
-// Custom hook to access context
-export const useUser = () => useContext(UserContext);
+// Custom hook to use user data
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error("useUser must be used within a UserProvider");
+  }
+  return context;
+};
