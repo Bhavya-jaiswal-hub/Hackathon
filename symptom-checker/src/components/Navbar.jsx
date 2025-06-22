@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FaBars } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { Typewriter } from "react-simple-typewriter";
 import { useAuth } from "../context/AuthContext";
 
@@ -8,7 +9,7 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, logout, signout } = useAuth(); // ✅ Also get signout
+  const { isAuthenticated, logout, signout } = useAuth();
 
   const navItems = [
     { name: "Home", path: "/" },
@@ -46,46 +47,50 @@ const Navbar = () => {
         {/* Logo */}
         <div className="text-red-500 font-bold text-xl flex-shrink-0">
           <Link to="/">
-           <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-red-500">
-  <span className="mr-2">|</span>
-  <span className="text-red-500">
-    <Typewriter
-      words={['Symptom Checker']}
-      loop={0} // 0 = infinite
-      cursor
-      cursorStyle="_"
-      typeSpeed={100}
-      deleteSpeed={60}
-      delaySpeed={1500}
-    />
-  </span>
-</h1>
-
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-red-500">
+              <span className="mr-2">|</span>
+              <span>
+                <Typewriter
+                  words={["Symptom Checker"]}
+                  loop={0}
+                  cursor
+                  cursorStyle="_"
+                  typeSpeed={100}
+                  deleteSpeed={60}
+                  delaySpeed={1500}
+                />
+              </span>
+            </h1>
           </Link>
         </div>
 
-        {/* Menu Icon (visible below lg breakpoint) */}
+        {/* Menu Icon */}
         <div className="lg:hidden ml-auto">
           <button onClick={() => setMenuOpen(!menuOpen)}>
             <FaBars className="text-red-500 text-2xl" />
           </button>
         </div>
 
-        {/* Center Nav Items (visible on large screens only) */}
+        {/* Desktop Nav Items */}
         <ul className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 space-x-6 text-gray-700 font-medium">
           {navItems.map((item, index) => (
-            <li key={index}>
+            <motion.li
+              key={item.name}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.2, duration: 0.6, ease: "easeOut" }}
+            >
               <Link
                 to={item.path}
                 className="px-3 py-1 hover:text-red-500 hover:underline underline-offset-4 transition-colors duration-300"
               >
                 {item.name}
               </Link>
-            </li>
+            </motion.li>
           ))}
         </ul>
 
-        {/* Auth Buttons (visible on large screens only) */}
+        {/* Auth Buttons (Desktop) */}
         <div className="hidden lg:flex items-center space-x-4 ml-auto">
           {isAuthenticated ? (
             <>
@@ -121,64 +126,78 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile & Tablet Dropdown Menu */}
-      {menuOpen && (
-        <div className="lg:hidden absolute top-16 left-0 w-full bg-white shadow-md z-10">
-          <ul className="flex flex-col items-center space-y-4 py-4">
-            {navItems.map((item, index) => (
-              <li key={index} className="w-full text-center">
-                <Link
-                  to={item.path}
-                  onClick={() => setMenuOpen(false)}
-                  className="block py-2 text-gray-700 font-medium hover:text-red-500 hover:bg-red-100 transition-all duration-300 ease-in-out"
+      {/* Mobile Nav Menu */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="lg:hidden absolute top-16 left-0 w-full bg-white shadow-md z-10"
+          >
+            <ul className="flex flex-col items-center space-y-4 py-4">
+              {navItems.map((item, index) => (
+                <motion.li
+                  key={item.name}
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                   transition={{ delay: index * 0.2, duration: 0.5, ease: "easeOut" }}
+                  className="w-full text-center"
                 >
-                  {item.name}
-                </Link>
-              </li>
-            ))}
+                  <Link
+                    to={item.path}
+                    onClick={() => setMenuOpen(false)}
+                    className="block py-2 text-gray-700 font-medium hover:text-red-500 hover:bg-red-100 transition-all duration-300 ease-in-out"
+                  >
+                    {item.name}
+                  </Link>
+                </motion.li>
+              ))}
 
-            {isAuthenticated ? (
-              <>
-                <li>
-                  <button
-                    onClick={handleLogout}
-                    className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600 transition"
-                  >
-                    Logout
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={handleSignout}
-                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
-                  >
-                    Sign Out
-                  </button>
-                </li>
-              </>
-            ) : (
-              <>
-                <li>
-                  <button
-                    onClick={handleLoginClick}
-                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
-                  >
-                    Login
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={handleSignupClick}
-                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
-                  >
-                    Sign Up
-                  </button>
-                </li>
-              </>
-            )}
-          </ul>
-        </div>
-      )}
+              {/* Auth buttons for mobile */}
+              {isAuthenticated ? (
+                <>
+                  <li key="logout-button">
+                    <button
+                      onClick={handleLogout}
+                      className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600 transition"
+                    >
+                      Logout
+                    </button>
+                  </li>
+                  <li key="signout-button">
+                    <button
+                      onClick={handleSignout}
+                      className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
+                    >
+                      Sign Out
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li key="login-button">
+                    <button
+                      onClick={handleLoginClick}
+                      className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
+                    >
+                      Login
+                    </button>
+                  </li>
+                  <li key="signup-button">
+                    <button
+                      onClick={handleSignupClick}
+                      className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
+                    >
+                      Sign Up
+                    </button>
+                  </li>
+                </>
+              )}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };
