@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { motion } from "framer-motion";
@@ -12,6 +12,12 @@ const LoginForm = () => {
   const [isOtpMode, setIsOtpMode] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+
+   // 👇 Add this useEffect to debug mode and step
+  useEffect(() => {
+    console.log("isOtpMode:", isOtpMode);
+    console.log("step:", step);
+  }, [isOtpMode, step]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,10 +63,12 @@ const LoginForm = () => {
         body: JSON.stringify({ email: formData.email }),
       });
       const data = await res.json();
-      if (res.ok) {
-        alert("📧 OTP sent to your email.");
-        setStep(2);
-      } else {
+     if (res.ok) {
+  alert("📧 OTP sent to your email.");
+  console.log("OTP mode activated, step set to 2");
+  setStep(2);
+}
+ else {
         alert("❌ " + (data.message || "OTP sending failed"));
       }
     } catch (error) {
@@ -174,7 +182,14 @@ const LoginForm = () => {
 
           </motion.form>
         ) : (
-          <motion.div className="space-y-4" variants={containerVariants} initial="hidden" animate="visible">
+          <motion.div
+  key={`${isOtpMode}-${step}`}  // ⬅️ force re-render when state changes
+  className="space-y-4"
+  variants={containerVariants}
+  initial="hidden"
+  animate="visible"
+>
+
             <motion.input
               variants={inputVariants}
               type="email"

@@ -12,6 +12,7 @@ const router = express.Router();
 const CryptoJS = require("crypto-js");
 
 dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -19,6 +20,7 @@ const allowedOrigins = [
   "http://localhost:5173", // for local frontend dev
   "https://hackathon-tau-bay.vercel.app", // your deployed frontend
 ];
+
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -133,6 +135,8 @@ app.post("/api/predict", async (req, res) => {
     res.status(500).json({ error: "Failed to process prediction." });
   }
 });
+
+
 
 // ✅ Signup (OTP-based email verification)
 app.post("/api/signup", async (req, res) => {

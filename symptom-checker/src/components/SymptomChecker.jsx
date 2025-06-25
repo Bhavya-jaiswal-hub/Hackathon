@@ -53,7 +53,8 @@ function SymptomChecker() {
 
     try {
       setLoading(true);
-      const res = await axios.post(`${API_URL}/api/predict`, {
+     const res = await axios.post(`${API_URL}/api/predict`, {
+
         age: userData.age,
         gender: userData.gender,
         symptoms: trimmedSymptoms,
@@ -70,7 +71,8 @@ function SymptomChecker() {
 
   const handleNearbyHospitals = () => {
     if (location.latitude && location.longitude) {
-      navigate(`/nearby-hospitals?lat=${location.latitude}&lng=${location.longitude}`);
+    navigate(`/nearby-hospitals?lat=${location.latitude}&lng=${location.longitude}`);
+
     } else {
       alert("Location not available. Please enable location access.");
     }
@@ -132,5 +134,4 @@ function SymptomChecker() {
     </div>
   );
 }
-
 export default SymptomChecker;
